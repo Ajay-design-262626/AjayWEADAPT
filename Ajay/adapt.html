@@ -6,22 +6,24 @@
 <title>Adapt — Template Adaptation Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/imgly-background-removal.browser.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#f1f1ef;
-    --paper:#2b2b2b;
-    --surface:#363636;
-    --surface-raised:#454545;
-    --line:#4a4a4a;
-    --line-strong:#606060;
-    --accent:#4d8fd1;
-    --accent-soft:#1f3b52;
-    --warn:#e07a64;
-    --muted:#a3a3a0;
+    --ink:#0d0d0d;
+    --paper:#ffffff;
+    --surface:#ffffff;
+    --surface-raised:#f4f3f0;
+    --line:#e7e5df;
+    --line-strong:#0d0d0d;
+    --accent:#0d0d0d;
+    --accent-soft:#f0efe9;
+    --warn:#d1493a;
+    --muted:#7a7873;
     --mono: 'SF Mono', 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica, Arial, sans-serif;
-    --radius: 4px;
+    --sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --radius: 10px;
+    --radius-lg: 18px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -32,27 +34,25 @@
     font-size: 14px;
     line-height: 1.5;
   }
-  .app{ max-width:1320px; margin:0 auto; padding:28px 28px 80px; }
+  .app{ max-width:1400px; margin:0 auto; padding:24px 32px 80px; }
 
   /* ---------- header / steps ---------- */
-  .topbar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; gap:16px; flex-wrap:wrap;}
-  .brand{ display:flex; align-items:baseline; gap:10px; }
-  .brand .mark{ width:9px; height:9px; background:var(--accent); display:inline-block; border-radius:1px; transform:translateY(-1px);}
-  .brand h1{ font-size:16px; font-weight:600; margin:0; letter-spacing:-0.01em; }
-  .brand .sub{ color:var(--muted); font-size:12.5px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+  .brand{ display:flex; align-items:center; gap:8px; }
+  .brand .logo-mark{ width:30px; height:30px; flex-shrink:0; }
+  .brand h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-0.02em; }
+  .brand .sub{ color:var(--muted); font-size:12px; font-weight:500; align-self:flex-end; margin-bottom:2px; }
 
-  .steps{ display:flex; gap:4px; }
+  .steps{ display:flex; gap:8px; flex-wrap:wrap; }
   .step-pill{
-    font-size:11.5px; font-weight:600; padding:6px 12px 6px 10px; border-radius:100px;
-    color:var(--muted); border:1px solid var(--line); background:var(--surface);
+    font-size:13px; font-weight:700; padding:10px 20px; border-radius:100px;
+    color:var(--ink); border:1px solid var(--line-strong); background:#fff;
     display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
     transition: all .12s ease;
   }
-  .step-pill .n{ width:16px; height:16px; border-radius:50%; background:var(--line); color:var(--ink); font-size:10px; display:flex; align-items:center; justify-content:center; }
-  .step-pill.active{ color:var(--ink); border-color:var(--ink); background:var(--surface-raised); }
-  .step-pill.active .n{ background:var(--accent); }
-  .step-pill.done{ color:var(--accent); border-color:var(--accent-soft);}
-  .step-pill.done .n{ background:var(--accent); }
+  .step-pill .n{ display:none; }
+  .step-pill.active{ color:#fff; border-color:var(--ink); background:var(--ink); }
+  .step-pill.done{ color:var(--ink); border-color:var(--line-strong);}
   .step-pill[disabled]{ opacity:.4; cursor:not-allowed; }
 
   section.panel{ display:none; }
@@ -62,27 +62,27 @@
   .grid2{ display:grid; grid-template-columns: 1fr 320px; gap:24px; align-items:start; }
   .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
   .card + .card{ margin-top:16px; }
-  .card h2{ font-size:13px; font-weight:600; margin:0 0 4px; }
+  .card h2{ font-size:13px; font-weight:700; margin:0 0 4px; }
   .card .hint{ font-size:12px; color:var(--muted); margin:0 0 14px; }
   label.field{ display:block; margin-bottom:12px; }
   label.field .lbl{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
   input[type=text], input[type=number], select, textarea{
-    width:100%; padding:7px 9px; border:1px solid var(--line-strong); border-radius:3px;
-    font-family:var(--sans); font-size:13px; background:var(--surface-raised); color:var(--ink);
+    width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:6px;
+    font-family:var(--sans); font-size:13px; background:#fff; color:var(--ink);
   }
   textarea{ resize:vertical; min-height:50px; }
-  input:focus, select:focus, textarea:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--ink); outline-offset:0; border-color:var(--ink); }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 
   .color-field{ display:flex; gap:6px; align-items:stretch; }
   .color-field input[type=color]{
-    width:34px; height:32px; padding:2px; border:1px solid var(--line-strong); border-radius:3px;
-    background:var(--surface-raised); cursor:pointer; flex-shrink:0;
+    width:34px; height:32px; padding:2px; border:1px solid var(--line-strong); border-radius:6px;
+    background:#fff; cursor:pointer; flex-shrink:0;
   }
   .color-field input[type=text]{ flex:1; min-width:0; }
 
   /* ---------- segmented icon control (Photoshop-style align buttons) ---------- */
-  .segmented{ display:flex; border:1px solid var(--line-strong); border-radius:3px; overflow:hidden; background:var(--surface-raised); width:fit-content; }
+  .segmented{ display:flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden; background:#fff; width:fit-content; }
   .segmented button{
     display:flex; align-items:center; justify-content:center; width:34px; height:30px;
     background:none; border:none; border-right:1px solid var(--line-strong); cursor:pointer;
@@ -90,39 +90,47 @@
   }
   .segmented button:last-child{ border-right:none; }
   .segmented button svg{ width:16px; height:16px; display:block; }
-  .segmented button:hover{ background:var(--line); color:var(--ink); }
-  .segmented button.active{ background:var(--accent); color:#fff; }
-  .segmented button.active:hover{ background:var(--accent); }
+  .segmented button:hover{ background:var(--surface-raised); color:var(--ink); }
+  .segmented button.active{ background:var(--ink); color:#fff; }
+  .segmented button.active:hover{ background:var(--ink); }
   .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
   button{ font-family:var(--sans); cursor:pointer; }
   .btn{
-    border:1px solid var(--accent); background:var(--accent); color:#fff;
-    padding:9px 16px; border-radius:3px; font-size:13px; font-weight:600;
+    border:1px solid var(--ink); background:var(--ink); color:#fff;
+    padding:10px 18px; border-radius:8px; font-size:13px; font-weight:700;
   }
-  .btn:hover{ background:#5b9bdc; border-color:#5b9bdc; }
+  .btn:hover{ background:#2a2a2a; border-color:#2a2a2a; }
   .btn:disabled{ opacity:.35; cursor:not-allowed; }
-  .btn.secondary{ background:var(--surface-raised); color:var(--ink); border-color:var(--line-strong); }
-  .btn.secondary:hover{ border-color:var(--ink); }
-  .btn.danger{ background:var(--surface-raised); color:var(--warn); border-color:#6b3f38; }
-  .btn.danger:hover{ background:#4a322e; }
-  .btn.small{ padding:5px 10px; font-size:12px; }
+  .btn.secondary{ background:#fff; color:var(--ink); border-color:var(--line-strong); }
+  .btn.secondary:hover{ background:var(--surface-raised); }
+  .btn.danger{ background:#fff; color:var(--warn); border-color:var(--warn); }
+  .btn.danger:hover{ background:#fbebe9; }
+  .btn.small{ padding:6px 12px; font-size:12px; }
   .btn.full{ width:100%; }
 
   /* ---------- step 1: upload ---------- */
   .dropzone{
-    border:1.5px dashed var(--line-strong); border-radius:var(--radius);
-    padding:60px 20px; text-align:center; cursor:pointer; background:var(--surface);
-    transition: border-color .12s, background .12s;
+    border:3px solid var(--ink); border-radius:var(--radius-lg);
+    padding:80px 20px; text-align:center; cursor:pointer; background:#fff;
+    transition: border-color .12s, background .12s; min-height:420px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
   }
-  .dropzone:hover, .dropzone.drag{ border-color:var(--accent); background:var(--accent-soft); }
-  .dropzone .icon{ font-size:28px; margin-bottom:10px; }
-  .dropzone .ddtext{ font-size:13.5px; font-weight:600; margin-bottom:4px;}
-  .dropzone .ddsub{ font-size:12px; color:var(--muted); }
+  .dropzone:hover, .dropzone.drag{ background:var(--surface-raised); }
+  .dropzone .icon{ display:none; }
+  .dropzone .ddtext{
+    font-size:16px; font-weight:600; display:inline-flex; align-items:center; gap:12px;
+    border:2px solid var(--ink); border-radius:100px; padding:10px 10px 10px 22px; background:#fff;
+  }
+  .dropzone .ddtext .ddicon{
+    width:30px; height:30px; border-radius:8px; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
+  }
+  .dropzone .ddsub{ font-size:12px; color:var(--muted); margin-top:12px; }
 
   /* ---------- step 2: editor ---------- */
   .editor-wrap{
-    background:#1e1e1e; border:1px solid var(--line); border-radius:var(--radius);
+    background:#1c1c1c; border:3px solid var(--ink); border-radius:var(--radius-lg);
     overflow:auto; max-height:72vh; padding:16px; display:flex; justify-content:center;
   }
   .canvas-stage{ position:relative; box-shadow:0 1px 3px rgba(0,0,0,.4); flex-shrink:0; }
@@ -145,24 +153,24 @@
   .box.image-type{ border-style:solid; }
   .box.logo-type{ border-style:dashed; }
 
-  /* ---------- layer tabs ---------- */
-  .layer-tabs{ display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid var(--line); }
+  /* ---------- layer tabs (relocated to layout-step toolbar as pill buttons) ---------- */
+  .layer-tabs{ display:flex; gap:6px; }
   .layer-tab{
-    flex:1; text-align:center; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
-    padding:9px 4px; background:none; border:none; color:var(--muted); cursor:pointer;
-    border-bottom:2px solid transparent; margin-bottom:-1px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:12.5px; font-weight:700; padding:9px 14px; border-radius:100px;
+    background:#fff; border:1px solid var(--line-strong); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
   }
   .layer-tab .tab-swatch{ width:7px; height:7px; border-radius:1px; }
-  .layer-tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
-  .layer-tab .tab-count{ background:var(--line); color:var(--ink); font-size:10px; font-weight:700; padding:1px 5px; border-radius:100px; }
-  .layer-tab.active .tab-count{ background:var(--accent); color:#fff; }
+  .layer-tab.active{ background:var(--ink); color:#fff; }
+  .layer-tab .tab-count{ background:var(--surface-raised); color:var(--ink); font-size:10px; font-weight:700; padding:1px 5px; border-radius:100px; }
+  .layer-tab.active .tab-count{ background:rgba(255,255,255,.25); color:#fff; }
 
   .layer-list{ display:flex; flex-direction:column; gap:6px; }
   .layer-item{
     display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line);
     border-radius:3px; background:var(--surface-raised); cursor:pointer; font-size:12.5px;
   }
-  .layer-item.selected{ border-color:var(--warn); background:#4a3530; }
+  .layer-item.selected{ border-color:var(--warn); background:#fbebe9; }
   .layer-item .swatch{ width:9px; height:9px; border-radius:1px; flex-shrink:0; }
   .layer-item .swatch.text{ background:var(--accent); }
   .layer-item .swatch.image{ background:#6fa0d8; }
@@ -230,13 +238,18 @@
   .image-fail-banner .ifb-tip{ margin-top:8px; color:var(--muted); }
 
   .output-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px; }
-  .output-item{ border:1px solid var(--line); border-radius:3px; overflow:hidden; background:var(--surface-raised); position:relative; }
+  .output-item{ border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--surface-raised); position:relative; }
   .output-item .oi-thumb{ position:relative; cursor:pointer; }
   .output-item .oi-thumb:hover::after{
-    content:'Click to edit'; position:absolute; inset:0; background:rgba(0,0,0,.55); color:#fff;
+    content:'Click to review'; position:absolute; inset:0; background:rgba(0,0,0,.55); color:#fff;
     display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;
   }
-  .output-item img{ width:100%; display:block; background:#1e1e1e; }
+  .output-item img{ width:100%; display:block; background:var(--surface-raised); }
+  .output-item .oi-download{
+    position:absolute; bottom:8px; right:8px; width:28px; height:28px; border-radius:6px;
+    background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center;
+    text-decoration:none; z-index:2;
+  }
   .output-item .edited-badge{
     position:absolute; top:6px; left:6px; background:var(--warn); color:#fff; font-size:10px; font-weight:700;
     padding:2px 6px; border-radius:100px; z-index:2; text-transform:uppercase; letter-spacing:.02em;
@@ -367,6 +380,88 @@
   .oi-name-input:hover{ border-color:var(--line-strong); }
   .oi-name-input:focus{ border-color:var(--accent); background:var(--surface-raised); outline:none; }
   .oi-ext{ font-size:12px; color:var(--muted); flex-shrink:0; }
+
+  /* ---------- icon toolbar (trash / download / generate) ---------- */
+  .icon-toolbar{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    display:flex; align-items:center; justify-content:center; width:38px; height:38px;
+    border-radius:8px; background:var(--ink); color:#fff; border:1px solid var(--ink); flex-shrink:0;
+  }
+  .icon-btn:hover{ background:#2a2a2a; }
+  .icon-btn svg{ width:17px; height:17px; display:block; }
+
+  /* ---------- type tabs (Text / Images / Logo pill row, layout step) ---------- */
+  .type-tabs{ display:flex; gap:6px; }
+  .type-tabs button{
+    font-size:12.5px; font-weight:700; padding:9px 16px; border-radius:100px;
+    border:1px solid var(--line-strong); background:#fff; color:var(--ink); display:flex; align-items:center; gap:6px;
+  }
+  .type-tabs button.active{ background:var(--ink); color:#fff; }
+
+  /* ---------- template strip (multi-template slots) ---------- */
+  .template-strip{
+    display:flex; gap:10px; align-items:center; overflow-x:auto; padding:14px 2px 4px; margin-top:10px;
+  }
+  .template-chip{
+    display:flex; align-items:center; gap:8px; padding:8px 14px 8px 8px; border-radius:100px;
+    border:1px solid var(--line-strong); background:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
+    flex-shrink:0; white-space:nowrap;
+  }
+  .template-chip.active{ background:var(--ink); color:#fff; }
+  .template-chip .tc-thumb{
+    width:22px; height:22px; border-radius:5px; background:var(--surface-raised); overflow:hidden; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+  }
+  .template-chip .tc-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .template-chip.add{ background:#fff; color:var(--ink); }
+  .template-chip .tc-del{ background:none; border:none; color:inherit; opacity:.6; font-size:13px; padding:0; line-height:1; }
+  .template-chip .tc-del:hover{ opacity:1; }
+
+  /* ---------- data step: deal/template mapping cards ---------- */
+  .deal-cards{ display:flex; gap:14px; overflow-x:auto; padding:4px 2px 10px; margin-bottom:16px; }
+  .deal-card{
+    flex:0 0 240px; border-radius:14px; padding:16px; color:#fff;
+    background:linear-gradient(160deg,#3a2f66,#241c47);
+  }
+  .deal-card:nth-child(2n){ background:linear-gradient(160deg,#7a2430,#4c151c); }
+  .deal-card .dc-tag{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.75; }
+  .deal-card .dc-title{ font-size:20px; font-weight:800; margin:2px 0 8px; }
+  .deal-card .dc-sub{ font-size:11.5px; opacity:.85; margin-bottom:10px; }
+  .deal-card .dc-row{ display:flex; gap:6px; margin-bottom:6px; }
+  .deal-card .dc-field{
+    flex:1; background:rgba(255,255,255,.14); border-radius:5px; padding:6px 8px; font-size:11px; font-weight:600;
+  }
+  .deal-card .dc-map{
+    flex:1; background:rgba(0,0,0,.28); border-radius:5px; padding:6px 8px; font-size:10.5px; opacity:.85;
+  }
+
+  /* ---------- quality check panel (generate step) ---------- */
+  .quality-panel{ position:sticky; top:16px; }
+  .quality-panel h2{ text-align:center; }
+  .quality-preview{
+    background:var(--surface-raised); border-radius:10px; overflow:hidden; display:flex; align-items:center;
+    justify-content:center; min-height:220px; margin-bottom:12px; position:relative;
+  }
+  .quality-preview img{ max-width:100%; max-height:280px; display:block; transition:transform .1s; }
+  .quality-nav{ display:flex; gap:10px; margin-bottom:18px; }
+  .quality-nav button{ flex:1; padding:10px; border-radius:8px; border:1px solid var(--line-strong); background:#fff; font-weight:700; }
+  .quality-nav button:hover{ background:var(--surface-raised); }
+  .quality-slider{ margin-bottom:18px; }
+  .quality-slider .qs-label{ text-align:center; font-size:12.5px; font-weight:600; margin-bottom:8px; }
+  .quality-slider .qs-row{ display:flex; align-items:center; gap:10px; }
+  .quality-slider .qs-row button{
+    width:26px; height:26px; border-radius:50%; border:1px solid var(--line-strong); background:#fff; font-weight:700;
+    flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .quality-slider input[type=range]{ flex:1; accent-color:var(--ink); }
+  .quality-empty{ font-size:12.5px; color:var(--muted); text-align:center; padding:30px 10px; }
+
+  /* ---------- import project tab ---------- */
+  .import-project-card{ max-width:640px; margin:0 auto; text-align:center; }
+  .import-project-card .ip-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+
+  /* ---------- brand logo mark ---------- */
+  .brand svg{ display:block; }
 </style>
 </head>
 <body>
@@ -374,19 +469,20 @@
 
   <div class="topbar">
     <div class="brand">
-      <span class="mark"></span>
-      <h1>Adapt</h1>
-      <span class="sub">Template adaptation tool</span>
+      <svg class="logo-mark" viewBox="0 0 40 40" fill="currentColor">
+        <polygon points="2,14 9,14 5.5,21"/>
+        <polygon points="6,25 13,25 9.5,32"/>
+        <polygon points="12,13 21,13 16.5,26 12,26"/>
+        <path d="M22 6 H32 V13 H26 V16.5 H31 V23 H26 V27 H32 V34 H22 Z"/>
+      </svg>
+      <h1>WE Adapt</h1>
     </div>
     <div class="steps" id="steps">
       <button class="step-pill active" data-step="1"><span class="n">1</span> Template</button>
       <button class="step-pill" data-step="2" disabled><span class="n">2</span> Layout</button>
       <button class="step-pill" data-step="3" disabled><span class="n">3</span> Data</button>
-      <button class="step-pill" data-step="4" disabled><span class="n">4</span> Generate</button>
+      <button class="step-pill" data-step="4"><span class="n">4</span> Import Project</button>
     </div>
-  </div>
-
-  <div class="projectbar">
     <div class="undo-redo" title="Undo / Redo">
       <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
@@ -395,11 +491,6 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
       </button>
     </div>
-    <button class="btn secondary small" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
-    <button class="btn secondary small" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">⭳ Export project file</button>
-    <button class="btn secondary small" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import project file</button>
-    <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
-    <span class="save-status" id="saveStatus"></span>
   </div>
 
   <div class="resume-banner" id="resumeBanner" style="display:none;">
@@ -414,11 +505,11 @@
     <div class="grid2" style="grid-template-columns:1fr;">
       <div>
         <div class="card">
-          <h2>1. Upload your template background</h2>
-          <p class="hint">Export the flattened PSD as a PNG or JPG (File → Export → Export As… in Photoshop). This is the static background every adaptation will be built on top of.</p>
+          <h2 style="font-size:28px; font-weight:800; text-transform:uppercase; margin-bottom:10px;">Upload your template</h2>
+          <p class="hint" style="font-size:13px;">Export the flattened PSD as a PNG or JPG (File → Export → Export As… in Photoshop). This is the static background every adaptation will be built on top of.</p>
           <div class="dropzone" id="dropzone">
             <div class="icon">＋</div>
-            <div class="ddtext">Drop a PNG or JPG here, or click to browse</div>
+            <div class="ddtext">Drop a PNG or JPG here <span class="ddicon">＋</span></div>
             <div class="ddsub">One template at a time · PNG / JPG · any size</div>
           </div>
           <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none">
@@ -446,14 +537,24 @@
         </div>
       </div>
       <div>
-        <div class="card">
-          <h2>Layers <span class="badge-count" id="layerCount">0</span></h2>
-          <p class="hint">Each box becomes a field your spreadsheet fills in. Grouped by type below.</p>
+        <div class="toolbar" style="margin-bottom:14px; justify-content:flex-end;">
+          <div class="icon-toolbar">
+            <button class="icon-btn" id="btnDeleteLayerIcon" title="Delete selected layer">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M5 4l.6 9.5a1 1 0 0 0 1 .9h2.8a1 1 0 0 0 1-.9L11 4"/></svg>
+            </button>
+            <button class="icon-btn" id="btnDownloadTemplateIcon" title="Download template background">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
+            </button>
+          </div>
           <div class="layer-tabs" id="layerTabs">
             <button class="layer-tab active" data-tab="text"><span class="tab-swatch" style="background:var(--accent)"></span>Text <span class="tab-count" id="countText">0</span></button>
             <button class="layer-tab" data-tab="image"><span class="tab-swatch" style="background:#4a6fa5"></span>Images <span class="tab-count" id="countImage">0</span></button>
-            <button class="layer-tab" data-tab="logo"><span class="tab-swatch" style="background:#9a7b3f"></span>Logos <span class="tab-count" id="countLogo">0</span></button>
+            <button class="layer-tab" data-tab="logo"><span class="tab-swatch" style="background:#9a7b3f"></span>Logo <span class="tab-count" id="countLogo">0</span></button>
           </div>
+        </div>
+        <div class="card">
+          <h2>Layers <span class="badge-count" id="layerCount">0</span></h2>
+          <p class="hint">Each box becomes a field your spreadsheet fills in. Grouped by type above.</p>
           <div class="layer-list" id="layerList"></div>
           <div class="empty-note" id="layerEmptyNote">Draw a box on the template, tagged as this type, to add a layer here.</div>
         </div>
@@ -659,12 +760,34 @@
         <div style="height:1px; background:var(--line); margin:14px 0;"></div>
 
         <label class="field">
-          <span class="lbl">Edge quality</span>
-          <select id="bgRemoveQuality">
-            <option value="small">Fast (smaller model, good for flat backgrounds)</option>
-            <option value="medium" selected>High quality (better on hair/fine edges, a bit slower)</option>
+          <span class="lbl">Background color</span>
+          <select id="bgRemoveColorSource">
+            <option value="auto" selected>Auto-detect from image edges</option>
+            <option value="manual">Pick manually</option>
           </select>
         </label>
+        <label class="field" id="bgRemoveManualColorField" style="display:none;">
+          <span class="lbl">Color to remove</span>
+          <div class="color-field">
+            <input type="color" id="bgRemoveBgColorSwatch" value="#ffffff">
+            <input type="text" id="bgRemoveBgColor" value="#ffffff">
+          </div>
+        </label>
+        <div class="row3">
+          <label class="field">
+            <span class="lbl">Tolerance</span>
+            <input type="number" id="bgRemoveTolerance" value="50" min="0" max="255">
+          </label>
+          <label class="field">
+            <span class="lbl">Edge fringe blending (px)</span>
+            <input type="number" id="bgRemoveFringePx" value="2" min="0" max="20">
+          </label>
+          <label class="field">
+            <span class="lbl">Stray-pixel cleanup (px)</span>
+            <input type="number" id="bgRemoveEdgeZonePx" value="6" min="0" max="30">
+          </label>
+        </div>
+        <p class="hint" style="margin-top:-4px;">Detects the flat background color at the image edges and clears every matching pixel — the same approach as our bgrem.py color-key tool. Best for logos/graphics on a flat background; raise tolerance if fringes remain.</p>
 
         <div class="toggle-row" id="bgRemoveTrimRow">
           <div class="tr-text">
@@ -718,29 +841,22 @@
       </div>
     </div>
 
-    <div class="footer-nav">
-      <button class="btn secondary" data-goto="2">← Back</button>
-      <button class="btn" id="toStep4" disabled>Continue to generate →</button>
-    </div>
-  </section>
-
-  <section class="panel" id="panel-4">
     <div class="card">
       <div class="toolbar">
         <div class="left">
-          <h2 style="margin:0;">3. Generate adaptations</h2>
+          <h2 style="margin:0;">Generate adaptations</h2>
         </div>
         <div class="left">
           <select id="exportFormatSelect" style="width:auto;">
             <option value="png">Export as PNG</option>
             <option value="jpg">Export as JPG</option>
           </select>
-          <button class="btn secondary" id="btnRegenerate">Generate / refresh all</button>
+          <button class="btn secondary" id="btnRegenerate">Generate</button>
           <button class="btn secondary" id="btnRenameAllToggle">✎ Rename all</button>
-          <button class="btn" id="btnDownloadZip" disabled>Download all (.zip)</button>
+          <button class="btn" id="btnDownloadZip" disabled>Download all</button>
         </div>
       </div>
-      <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Click any export below to fix its text before downloading. Click a filename to rename it.</p>
+      <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Click any export below to fix its text before downloading, or use the Quality Check panel to fine-tune it.</p>
       <div class="rename-all-bar" id="renameAllBar" style="display:none;">
         <span class="rl">Prefix</span>
         <input type="text" id="renamePrefix" placeholder="e.g. banner">
@@ -756,14 +872,76 @@
         <div class="progress-text" id="progressText">0 / 0</div>
       </div>
       <div class="image-fail-banner" id="imageFailBanner" style="display:none;"></div>
-      <div class="output-grid" id="outputGrid"></div>
+      <div class="grid2">
+        <div class="output-grid" id="outputGrid"></div>
+        <div class="card quality-panel" id="qualityPanel">
+          <h2>Quality Check</h2>
+          <div class="quality-preview" id="qualityPreview">
+            <div class="quality-empty" id="qualityEmpty">Generate your adaptations, then click one to review it here.</div>
+            <img id="qualityPreviewImg" style="display:none;" alt="Preview">
+          </div>
+          <div class="quality-nav">
+            <button id="qualityPrev">← </button>
+            <button id="qualityNext">→</button>
+          </div>
+          <div class="quality-slider">
+            <div class="qs-label">Zoom in / Zoom out</div>
+            <div class="qs-row">
+              <button data-adjust="zoom" data-dir="-1">−</button>
+              <input type="range" id="qualityZoom" min="1" max="3" step="0.05" value="1">
+              <button data-adjust="zoom" data-dir="1">+</button>
+            </div>
+          </div>
+          <div class="quality-slider">
+            <div class="qs-label">Brightness / Contrast</div>
+            <div class="qs-row">
+              <button data-adjust="brightness" data-dir="-1">−</button>
+              <input type="range" id="qualityBrightness" min="-100" max="100" step="1" value="0">
+              <button data-adjust="brightness" data-dir="1">+</button>
+            </div>
+            <div class="qs-row" style="margin-top:8px;">
+              <button data-adjust="contrast" data-dir="-1">−</button>
+              <input type="range" id="qualityContrast" min="-100" max="100" step="1" value="0">
+              <button data-adjust="contrast" data-dir="1">+</button>
+            </div>
+          </div>
+          <div class="quality-slider">
+            <div class="qs-label">Saturation</div>
+            <div class="qs-row">
+              <button data-adjust="saturation" data-dir="-1">−</button>
+              <input type="range" id="qualitySaturation" min="-100" max="100" step="1" value="0">
+              <button data-adjust="saturation" data-dir="1">+</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn secondary full" id="qualityEditContent">Edit text &amp; images</button>
+            <button class="btn secondary full" id="qualityReset">Reset</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="footer-nav">
-      <button class="btn secondary" data-goto="3">← Back</button>
+      <button class="btn secondary" data-goto="2">← Back</button>
       <span></span>
     </div>
   </section>
+
+  <section class="panel" id="panel-4">
+    <div class="card import-project-card">
+      <h2 style="font-size:22px; margin-bottom:6px;">Import Project</h2>
+      <p class="hint">Save your progress in this browser, download a portable project file to store elsewhere (Drive, Dropbox, email…), or load one you saved earlier.</p>
+      <div class="ip-row">
+        <button class="btn secondary" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
+        <button class="btn secondary" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">⭳ Export project file</button>
+        <button class="btn" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import project file</button>
+        <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
+      </div>
+      <div class="save-status" id="saveStatus" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
+  <div class="template-strip" id="templateStrip" style="display:none;"></div>
 
   <div class="modal-overlay" id="editModalOverlay">
     <div class="modal-card">
@@ -818,13 +996,21 @@
     exportFormat: 'png',         // 'png' | 'jpg' — applies to "download all"
     jpgQuality: 0.92,
     removeBackgroundByType: { image: false, logo: false }, // global switches, not per-layer
-    bgRemovalQuality: 'medium',   // 'small' (fast) | 'medium' (high quality edges)
+    bgRemovalColorSource: 'auto', // 'auto' (detect from image edges) | 'manual'
+    bgRemovalBgColor: '#ffffff',  // used when bgRemovalColorSource === 'manual'
+    bgRemovalTolerance: 50,       // per-channel tolerance for background color matching (0-255)
+    bgRemovalFringePx: 2,         // dilation pixels for fringe blending at cutout edges
+    bgRemovalEdgeZonePx: 6,       // dilation pixels for stray-pixel cleanup zone
     bgRemovalTrim: true,          // crop to subject bounding box after removal
     bgRemovalFill: false,         // composite onto a solid color instead of transparency
-    bgRemovalFillColor: '#ffffff'
+    bgRemovalFillColor: '#ffffff',
+    templates: [],              // {id,name,dataUrl,naturalW,naturalH,layers,columnMap} — other template slots
+    activeTemplateId: null       // id of the slot whose data currently lives in the fields above
   };
   let layerSeq = 1;
   let fontSeq = 1;
+  let templateSeq = 1;
+  function newTemplateId(){ return 'TPL'+(templateSeq++); }
 
   /* ===================== UNDO / REDO (layout history) ===================== */
   let history = [];
@@ -895,15 +1081,15 @@
     else if(e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z' && e.shiftKey)){ e.preventDefault(); redo(); }
   });
 
-  /* ===================== BACKGROUND REMOVAL CACHE ===================== */
-  // Cache processed (background-removed) images by source URL so we never
-  // run the model twice on the same asset. Key: url -> Promise<HTMLImageElement|null>
-  const bgRemovedCache = new Map();
-  let bgRemovalLibReady = null; // Promise that resolves once the lib's first call has primed
+  /* ===================== BACKGROUND REMOVAL ENGINE =====================
+     Ported from bgrem.py's "color" mode: no external AI model. We sample the
+     flat background color from the image edges (or take a manual override),
+     clear every pixel within tolerance of it, blend the fringe against the
+     fill color, then mop up stray near-background pixels near the cutout
+     edge. Runs entirely on canvas/ImageData, so it's always available. */
+  const bgRemovedCache = new Map(); // cacheKey -> Promise<HTMLImageElement|null>
 
-  function bgRemovalAvailable(){
-    return typeof window.imglyRemoveBackground === 'function' || (window.imgly && typeof window.imgly.removeBackground === 'function');
-  }
+  function bgRemovalAvailable(){ return true; }
 
   // Background removal is a global, per-type setting now (not per layer instance).
   function isBgRemovalActiveForLayer(layer){
@@ -911,14 +1097,119 @@
     return !!state.removeBackgroundByType[layer.type];
   }
 
-  function getRemoveBackgroundFn(){
-    if(typeof window.imglyRemoveBackground === 'function') return window.imglyRemoveBackground;
-    if(window.imgly && typeof window.imgly.removeBackground === 'function') return window.imgly.removeBackground;
-    return null;
+  function hexToRgb(hex){
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex||'').trim());
+    if(!m) return {r:255,g:255,b:255};
+    return {r:parseInt(m[1],16), g:parseInt(m[2],16), b:parseInt(m[3],16)};
+  }
+
+  // Mirrors detect_bg_color(): sample the 4 edges, quantize to buckets of 10,
+  // return the most common color.
+  function detectBgColorFromEdges(ctx, w, h){
+    const counts = new Map();
+    const top = ctx.getImageData(0,0,w,1).data;
+    const bottom = ctx.getImageData(0,h-1,w,1).data;
+    const left = ctx.getImageData(0,0,1,h).data;
+    const right = ctx.getImageData(w-1,0,1,h).data;
+    [top,bottom,left,right].forEach(rowData=>{
+      for(let i=0;i<rowData.length;i+=4){
+        const key = (Math.floor(rowData[i]/10)*10)+','+(Math.floor(rowData[i+1]/10)*10)+','+(Math.floor(rowData[i+2]/10)*10);
+        counts.set(key, (counts.get(key)||0)+1);
+      }
+    });
+    let best=null, bestCount=-1;
+    counts.forEach((c,k)=>{ if(c>bestCount){ bestCount=c; best=k; } });
+    const [r,g,b] = (best||'255,255,255').split(',').map(Number);
+    return {r,g,b};
+  }
+
+  // 4-connected binary dilation, matching scipy's default binary_dilation structure.
+  function dilateMask(mask, w, h, iterations){
+    let cur = mask;
+    for(let it=0; it<iterations; it++){
+      const next = new Uint8Array(w*h);
+      for(let y=0; y<h; y++){
+        const row = y*w;
+        for(let x=0; x<w; x++){
+          const p = row+x;
+          if(cur[p]){ next[p]=1; continue; }
+          if((x>0 && cur[p-1]) || (x<w-1 && cur[p+1]) || (y>0 && cur[p-w]) || (y<h-1 && cur[p+w])) next[p]=1;
+        }
+      }
+      cur = next;
+    }
+    return cur;
+  }
+
+  // Mirrors remove_by_color(): core mask -> fill/transparent -> fringe blend -> stray cleanup.
+  function removeBackgroundByColorAlgo(img, opts){
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d', {willReadFrequently:true});
+    ctx.drawImage(img, 0, 0, w, h);
+
+    let imageData;
+    try{ imageData = ctx.getImageData(0, 0, w, h); }
+    catch(err){ return null; } // tainted canvas (CORS) — can't process
+
+    const bgColor = opts.bgColor || detectBgColorFromEdges(ctx, w, h);
+    const {r:br, g:bg, b:bb} = bgColor;
+    const tolerance = opts.tolerance;
+    const fill = hexToRgb(opts.fillColor);
+    const data = imageData.data;
+    const n = w*h;
+
+    const bgMask = new Uint8Array(n);
+    for(let p=0; p<n; p++){
+      const i = p*4;
+      if(Math.abs(data[i]-br)<=tolerance && Math.abs(data[i+1]-bg)<=tolerance && Math.abs(data[i+2]-bb)<=tolerance){
+        bgMask[p] = 1;
+      }
+    }
+
+    if(opts.transparent){
+      for(let p=0; p<n; p++){ if(bgMask[p]) data[p*4+3] = 0; }
+    } else {
+      for(let p=0; p<n; p++){
+        if(bgMask[p]){
+          const i = p*4;
+          data[i]=fill.r; data[i+1]=fill.g; data[i+2]=fill.b; data[i+3]=255;
+        }
+      }
+
+      // Fringe blending — smooth JPEG anti-alias edge pixels.
+      const expanded = dilateMask(bgMask, w, h, opts.fringePx);
+      for(let p=0; p<n; p++){
+        if(expanded[p] && !bgMask[p]){
+          const i = p*4;
+          const diffMean = (Math.abs(data[i]-br)+Math.abs(data[i+1]-bg)+Math.abs(data[i+2]-bb))/3;
+          let sim = Math.max(0, Math.min(1, 1 - diffMean/128));
+          sim = Math.max(0, Math.min(1, sim*2.5));
+          data[i]   = data[i]  *(1-sim) + fill.r*sim;
+          data[i+1] = data[i+1]*(1-sim) + fill.g*sim;
+          data[i+2] = data[i+2]*(1-sim) + fill.b*sim;
+        }
+      }
+
+      // Stray pixel cleanup within the edge zone.
+      const edgeZone = dilateMask(bgMask, w, h, opts.edgeZonePx);
+      const looseTol = tolerance + 60;
+      for(let p=0; p<n; p++){
+        if(edgeZone[p]){
+          const i = p*4;
+          if(Math.abs(data[i]-br)<=looseTol && Math.abs(data[i+1]-bg)<=looseTol && Math.abs(data[i+2]-bb)<=looseTol){
+            data[i]=fill.r; data[i+1]=fill.g; data[i+2]=fill.b; data[i+3]=255;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return c;
   }
 
   // Crop a canvas/image down to the bounding box of its non-transparent pixels.
-  // Mirrors the trim_to_content() step in the rembg CLI script.
   function trimToSubject(img){
     const c = document.createElement('canvas');
     c.width = img.naturalWidth || img.width;
@@ -948,19 +1239,6 @@
     return out;
   }
 
-  // Composite a transparent image onto a solid background color.
-  // Mirrors the --bg-color option in the rembg CLI script.
-  function fillWithColor(img, hexColor){
-    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = hexColor || '#ffffff';
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-    return c;
-  }
-
   function canvasToImage(canvas){
     return new Promise(resolve=>{
       canvas.toBlob(blob=>{
@@ -973,56 +1251,39 @@
     });
   }
 
-  // Runs background removal on an already-loaded <img> (or a URL) and returns
-  // a new HTMLImageElement with transparency (or a solid fill), or null on failure.
-  // `sourceImg`, when provided, is an <img> that has ALREADY been successfully
-  // loaded (e.g. via a working Drive/CORS-proxy candidate URL) — we hand that
-  // straight to the removal lib instead of making it re-fetch the raw `url`,
-  // which is very often a Google Drive share link or otherwise unfetchable
-  // directly and would just fail silently.
+  // Runs the color-key removal on an already-loaded <img> and returns a new
+  // HTMLImageElement with transparency (or a solid fill), or null on failure.
   async function getBackgroundRemovedImage(url, sourceImg){
-    if(!url) return null;
-    // Cache key includes the settings that affect the output, so toggling
-    // quality/trim/fill doesn't serve a stale result from a previous run.
-    const cacheKey = [url, state.bgRemovalQuality, state.bgRemovalTrim, state.bgRemovalFill, state.bgRemovalFillColor].join('::');
+    if(!url || !sourceImg) return null;
+    // Cache key includes every setting that affects the output, so tweaking
+    // tolerance/fill/trim doesn't serve a stale result from a previous run.
+    const cacheKey = [
+      url, state.bgRemovalColorSource, state.bgRemovalBgColor, state.bgRemovalTolerance,
+      state.bgRemovalFringePx, state.bgRemovalEdgeZonePx,
+      state.bgRemovalTrim, state.bgRemovalFill, state.bgRemovalFillColor
+    ].join('::');
     if(bgRemovedCache.has(cacheKey)) return bgRemovedCache.get(cacheKey);
 
     const promise = (async ()=>{
-      const fn = getRemoveBackgroundFn();
-      if(!fn){
-        console.warn('Background removal library not available.');
-        return null;
-      }
       try{
-        // The @imgly/background-removal lib accepts a URL, Blob, or HTMLImageElement
-        // and returns a Blob (PNG with alpha) by default. Prefer the already-loaded
-        // image element so we reuse whichever candidate URL actually worked.
-        const source = sourceImg || url;
-        const config = {
-          model: state.bgRemovalQuality === 'small' ? 'small' : 'medium',
-          output: { format: 'image/png', quality: 1 }
+        const opts = {
+          bgColor: state.bgRemovalColorSource==='manual' ? hexToRgb(state.bgRemovalBgColor) : null,
+          tolerance: state.bgRemovalTolerance,
+          fillColor: state.bgRemovalFillColor,
+          transparent: !state.bgRemovalFill,
+          fringePx: state.bgRemovalFringePx,
+          edgeZonePx: state.bgRemovalEdgeZonePx
         };
-        const resultBlob = await fn(source, config);
-        const objUrl = URL.createObjectURL(resultBlob);
-        let img = await new Promise((resolve, reject)=>{
-          const im = new Image();
-          im.onload = ()=>resolve(im);
-          im.onerror = reject;
-          im.src = objUrl;
-        });
-
-        // Post-process to mirror the rembg CLI's --trim / --bg-color behavior.
-        let canvasResult = null;
-        if(state.bgRemovalTrim){
-          canvasResult = trimToSubject(img);
+        let canvasResult = removeBackgroundByColorAlgo(sourceImg, opts);
+        if(!canvasResult){
+          console.warn('Background removal skipped (image blocked by CORS):', url);
+          return null;
         }
-        if(state.bgRemovalFill){
-          canvasResult = fillWithColor(canvasResult || img, state.bgRemovalFillColor);
+        // Trim only makes sense on a transparent cutout — a filled result is fully opaque.
+        if(state.bgRemovalTrim && !state.bgRemovalFill){
+          canvasResult = trimToSubject(canvasResult);
         }
-        if(canvasResult){
-          img = await canvasToImage(canvasResult);
-        }
-        return img;
+        return await canvasToImage(canvasResult);
       }catch(err){
         console.error('Background removal failed for', url, err);
         return null;
@@ -1078,15 +1339,123 @@
         state.templateDataUrl = e.target.result;
         state.naturalW = img.naturalWidth;
         state.naturalH = img.naturalHeight;
+        if(!state.activeTemplateId){
+          state.activeTemplateId = newTemplateId();
+          state.templates.push(currentTemplateSnapshot());
+        } else {
+          syncActiveTemplateIntoList();
+        }
         unlockStep(2);
         goToStep(2);
         setupEditorCanvas();
         resetHistory();
+        renderTemplateStrip();
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
+
+  /* ===================== MULTI-TEMPLATE SLOTS ===================== */
+  function currentTemplateSnapshot(){
+    return {
+      id: state.activeTemplateId, name: state.templateName, dataUrl: state.templateDataUrl,
+      naturalW: state.naturalW, naturalH: state.naturalH, layers: state.layers, columnMap: state.columnMap
+    };
+  }
+  function syncActiveTemplateIntoList(){
+    if(!state.activeTemplateId) return;
+    const idx = state.templates.findIndex(t=>t.id===state.activeTemplateId);
+    if(idx>=0) state.templates[idx] = currentTemplateSnapshot();
+  }
+  function loadTemplateSnapshot(snap){
+    state.activeTemplateId = snap.id;
+    state.templateName = snap.name || 'template';
+    state.templateDataUrl = snap.dataUrl || null;
+    state.naturalW = snap.naturalW || 0;
+    state.naturalH = snap.naturalH || 0;
+    state.layers = snap.layers || [];
+    state.columnMap = snap.columnMap || {};
+    state.selectedLayerId = null;
+    if(snap.dataUrl){
+      const img = new Image();
+      img.onload = ()=>{
+        state.templateImg = img;
+        unlockStep(2);
+        document.getElementById('toStep3').disabled = state.layers.length ? false : true;
+        if(state.layers.length) unlockStep(3);
+        setupEditorCanvas();
+        resetHistory();
+      };
+      img.src = snap.dataUrl;
+    } else {
+      state.templateImg = null;
+    }
+  }
+  function switchToTemplate(id){
+    if(id === state.activeTemplateId) return;
+    syncActiveTemplateIntoList();
+    const target = state.templates.find(t=>t.id===id);
+    if(!target) return;
+    loadTemplateSnapshot(target);
+    buildColumnMapUI();
+    renderTemplateStrip();
+    goToStep(target.dataUrl ? 2 : 1);
+  }
+  function addNewTemplateSlot(){
+    syncActiveTemplateIntoList();
+    state.activeTemplateId = newTemplateId();
+    state.templateName = 'template';
+    state.templateDataUrl = null;
+    state.templateImg = null;
+    state.naturalW = 0; state.naturalH = 0;
+    state.layers = [];
+    state.columnMap = {};
+    state.selectedLayerId = null;
+    state.templates.push(currentTemplateSnapshot());
+    renderTemplateStrip();
+    goToStep(1);
+  }
+  function removeTemplateSlot(id){
+    const idx = state.templates.findIndex(t=>t.id===id);
+    if(idx<0) return;
+    const wasActive = id===state.activeTemplateId;
+    state.templates.splice(idx,1);
+    if(wasActive){
+      if(state.templates.length){
+        loadTemplateSnapshot(state.templates[Math.max(0, idx-1)]);
+        buildColumnMapUI();
+      } else {
+        state.activeTemplateId = null;
+        state.templateImg = null; state.templateDataUrl = null; state.templateName = 'template';
+        state.naturalW = 0; state.naturalH = 0; state.layers = []; state.columnMap = {};
+        state.selectedLayerId = null;
+        goToStep(1);
+      }
+    }
+    renderTemplateStrip();
+  }
+  function renderTemplateStrip(){
+    const strip = document.getElementById('templateStrip');
+    if(!state.templates.length){ strip.style.display='none'; strip.innerHTML=''; return; }
+    strip.style.display='flex';
+    strip.innerHTML='';
+    state.templates.forEach(t=>{
+      const chip = document.createElement('div');
+      chip.className = 'template-chip'+(t.id===state.activeTemplateId?' active':'');
+      chip.innerHTML = `<span class="tc-thumb">${t.dataUrl?`<img src="${t.dataUrl}" alt="">`:'🖼'}</span><span>${escapeHtml(t.name||'template')}</span>${state.templates.length>1?'<button class="tc-del" title="Remove template">×</button>':''}`;
+      const delBtn = chip.querySelector('.tc-del');
+      if(delBtn) delBtn.addEventListener('click', e=>{ e.stopPropagation(); removeTemplateSlot(t.id); });
+      chip.addEventListener('click', ()=> switchToTemplate(t.id) );
+      strip.appendChild(chip);
+    });
+    const addChip = document.createElement('div');
+    addChip.className = 'template-chip add';
+    addChip.innerHTML = '<span class="tc-thumb">＋</span><span>New template</span>';
+    addChip.addEventListener('click', addNewTemplateSlot);
+    strip.appendChild(addChip);
+  }
+  renderTemplateStrip();
 
   /* ===================== STEP 2: LAYOUT EDITOR ===================== */
   const stage = document.getElementById('canvasStage');
@@ -1377,7 +1746,13 @@
   const elBgRemoveLogoToggle = document.getElementById('bgRemoveLogoToggle');
   const elBgRemoveStatus = document.getElementById('bgRemoveStatus');
   const elBgRemoveAdvanced = document.getElementById('bgRemoveAdvanced');
-  const elBgRemoveQuality = document.getElementById('bgRemoveQuality');
+  const elBgRemoveColorSource = document.getElementById('bgRemoveColorSource');
+  const elBgRemoveManualColorField = document.getElementById('bgRemoveManualColorField');
+  const elBgRemoveBgColor = document.getElementById('bgRemoveBgColor');
+  const elBgRemoveBgColorSwatch = document.getElementById('bgRemoveBgColorSwatch');
+  const elBgRemoveTolerance = document.getElementById('bgRemoveTolerance');
+  const elBgRemoveFringePx = document.getElementById('bgRemoveFringePx');
+  const elBgRemoveEdgeZonePx = document.getElementById('bgRemoveEdgeZonePx');
   const elBgRemoveTrimToggle = document.getElementById('bgRemoveTrimToggle');
   const elBgRemoveFillToggle = document.getElementById('bgRemoveFillToggle');
   const elBgRemoveFillColorField = document.getElementById('bgRemoveFillColorField');
@@ -1472,13 +1847,13 @@
     if(onImage) parts.push('Images');
     if(onLogo) parts.push('Logos');
     const extras = [];
-    if(state.bgRemovalTrim) extras.push('trimmed to the subject');
+    if(state.bgRemovalColorSource==='manual') extras.push(`removing ${state.bgRemovalBgColor}`);
+    else extras.push('auto-detecting the background color');
+    if(state.bgRemovalTrim && !state.bgRemovalFill) extras.push('trimmed to the subject');
     if(state.bgRemovalFill) extras.push(`filled with ${state.bgRemovalFillColor}`);
-    const extraText = extras.length ? ` Results will be ${extras.join(' and ')}.` : '';
-    const lib = bgRemovalAvailable();
-    elBgRemoveStatus.textContent = lib
-      ? `Background will be removed for every ${parts.join(' and ')} field when generating. First-time processing of each image can take a few seconds.${extraText}`
-      : `Background removal is queued for ${parts.join(' and ')} — the model is still loading, but it'll be ready by the time you generate.${extraText}`;
+    const extraText = ` ${extras.join(', ')}.`.replace(/^ /, ' ').replace(/^./, c=>c.toUpperCase());
+    elBgRemoveStatus.textContent =
+      `Background will be removed for every ${parts.join(' and ')} field when generating (tolerance ${state.bgRemovalTolerance}).${extraText}`;
     elBgRemoveStatus.classList.remove('err');
   }
 
@@ -1492,9 +1867,38 @@
     updateBgRemovalStatusText();
     renderEditor();
   });
-  elBgRemoveQuality.addEventListener('change', e=>{
-    state.bgRemovalQuality = e.target.value;
+  elBgRemoveColorSource.addEventListener('change', e=>{
+    state.bgRemovalColorSource = e.target.value;
+    elBgRemoveManualColorField.style.display = e.target.value==='manual' ? 'block' : 'none';
     updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveBgColor.addEventListener('input', e=>{
+    state.bgRemovalBgColor = e.target.value;
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) elBgRemoveBgColorSwatch.value = e.target.value;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveBgColorSwatch.addEventListener('input', e=>{
+    elBgRemoveBgColor.value = e.target.value;
+    state.bgRemovalBgColor = e.target.value;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveTolerance.addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    state.bgRemovalTolerance = isNaN(v) ? 50 : Math.max(0, Math.min(255, v));
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveFringePx.addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    state.bgRemovalFringePx = isNaN(v) ? 2 : Math.max(0, Math.min(20, v));
+    renderEditor();
+  });
+  elBgRemoveEdgeZonePx.addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    state.bgRemovalEdgeZonePx = isNaN(v) ? 6 : Math.max(0, Math.min(30, v));
     renderEditor();
   });
   elBgRemoveTrimToggle.addEventListener('change', e=>{
@@ -1526,12 +1930,24 @@
   elBoxW.addEventListener('input', e=>updateSelectedLayer('w', Number(e.target.value)));
   elBoxH.addEventListener('input', e=>updateSelectedLayer('h', Number(e.target.value)));
 
-  document.getElementById('btnDeleteLayer').addEventListener('click', ()=>{
+  function deleteSelectedLayer(){
+    if(!state.selectedLayerId) return;
     state.layers = state.layers.filter(l=>l.id!==state.selectedLayerId);
     state.selectedLayerId=null;
     if(!state.layers.length) document.getElementById('toStep3').disabled = true;
     renderEditor();
     pushHistory();
+  }
+  document.getElementById('btnDeleteLayer').addEventListener('click', deleteSelectedLayer);
+  document.getElementById('btnDeleteLayerIcon').addEventListener('click', deleteSelectedLayer);
+  document.getElementById('btnDownloadTemplateIcon').addEventListener('click', ()=>{
+    if(!state.templateDataUrl) return;
+    const a = document.createElement('a');
+    a.href = state.templateDataUrl;
+    a.download = safeFileName(state.templateName || 'template') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   });
 
   const fontFileInput = document.getElementById('fontFileInput');
@@ -1621,7 +2037,13 @@
   renderFontList();
   elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
   elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
-  elBgRemoveQuality.value = state.bgRemovalQuality;
+  elBgRemoveColorSource.value = state.bgRemovalColorSource;
+  elBgRemoveManualColorField.style.display = state.bgRemovalColorSource==='manual' ? 'block' : 'none';
+  elBgRemoveBgColor.value = state.bgRemovalBgColor;
+  elBgRemoveBgColorSwatch.value = state.bgRemovalBgColor;
+  elBgRemoveTolerance.value = state.bgRemovalTolerance;
+  elBgRemoveFringePx.value = state.bgRemovalFringePx;
+  elBgRemoveEdgeZonePx.value = state.bgRemovalEdgeZonePx;
   elBgRemoveTrimToggle.checked = state.bgRemovalTrim;
   elBgRemoveFillToggle.checked = state.bgRemovalFill;
   elBgRemoveFillColorField.style.display = state.bgRemovalFill ? 'block' : 'none';
@@ -1681,8 +2103,6 @@
     rawSheetFile = rows;
     applyHeaderToggle();
     document.getElementById('mappingCard').style.display='block';
-    document.getElementById('toStep4').disabled = false;
-    unlockStep(4);
   }
 
   const sourceBadge = document.getElementById('sourceBadge');
@@ -1704,7 +2124,6 @@
     state.filenameColumn = '';
     state.generated = [];
     document.getElementById('mappingCard').style.display = 'none';
-    document.getElementById('toStep4').disabled = true;
     document.getElementById('sheetInput').value = '';
     document.getElementById('sheetUrlInput').value = '';
     sheetUrlStatus.textContent = '';
@@ -1915,10 +2334,6 @@
     table.innerHTML = html;
   }
 
-  document.getElementById('toStep4').addEventListener('click', ()=>{
-    goToStep(4);
-  });
-
   /* ===================== STEP 4: GENERATE ===================== */
   const renderCanvas = document.getElementById('renderCanvas');
   const renderCtx = renderCanvas.getContext('2d');
@@ -2079,6 +2494,10 @@
       renderCtx.fillStyle = '#ffffff';
       renderCtx.fillRect(0,0,renderCanvas.width, renderCanvas.height);
     }
+    const adjust = overrides.__adjust;
+    if(adjust){
+      renderCtx.filter = `brightness(${100+adjust.brightness}%) contrast(${100+adjust.contrast}%) saturate(${100+adjust.saturation}%)`;
+    }
     renderCtx.drawImage(state.templateImg, 0,0, state.naturalW, state.naturalH);
 
     for(const layer of state.layers){
@@ -2121,6 +2540,7 @@
         }
       }
     }
+    renderCtx.filter = 'none';
     return canvasToBlob(renderCanvas, format, quality);
   }
 
@@ -2146,6 +2566,9 @@
     const grid = document.getElementById('outputGrid');
     grid.innerHTML='';
     state.generated = [];
+    qualitySelectedId = null;
+    qEmpty.style.display = 'block';
+    qImg.style.display = 'none';
     imageLoadFailures = [];
     document.getElementById('imageFailBanner').style.display = 'none';
     const progressWrap = document.getElementById('progressWrap');
@@ -2157,9 +2580,6 @@
     const format = document.getElementById('exportFormatSelect').value;
 
     const usesBgRemoval = anyLayerUsesBackgroundRemoval();
-    if(usesBgRemoval && !bgRemovalAvailable()){
-      text.textContent = 'Loading background removal model…';
-    }
 
     for(let i=0;i<total;i++){
       const row = state.sheetRows[i];
@@ -2188,6 +2608,7 @@
     }
     document.getElementById('btnDownloadZip').disabled = false;
     showImageFailuresIfAny();
+    if(state.generated.length) selectQualityEntry(state.generated[0].id);
   }
 
   function showImageFailuresIfAny(){
@@ -2232,7 +2653,7 @@
           <a href="${entry.url}" download="${escapeHtml(fname)}" title="Download">↓</a>
         </div>
       </div>`;
-    item.querySelector('.oi-thumb').addEventListener('click', ()=> openEditModal(entry.id) );
+    item.querySelector('.oi-thumb').addEventListener('click', ()=> selectQualityEntry(entry.id) );
     item.querySelector('.oi-fmt').addEventListener('change', async (e)=>{
       await switchItemFormat(entry.id, e.target.value);
     });
@@ -2264,7 +2685,86 @@
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
     refreshOutputItemEl(entry);
+    if(qualitySelectedId===entry.id) qImg.src = entry.url;
   }
+
+  /* ----- Quality Check panel: zoom / brightness / contrast / saturation, prev/next ----- */
+  let qualitySelectedId = null;
+  const qEmpty = document.getElementById('qualityEmpty');
+  const qImg = document.getElementById('qualityPreviewImg');
+  const qZoom = document.getElementById('qualityZoom');
+  const qBrightness = document.getElementById('qualityBrightness');
+  const qContrast = document.getElementById('qualityContrast');
+  const qSaturation = document.getElementById('qualitySaturation');
+
+  function selectQualityEntry(id){
+    const entry = state.generated.find(g=>g.id===id);
+    if(!entry) return;
+    qualitySelectedId = id;
+    const a = entry.overrides.__adjust || {brightness:0, contrast:0, saturation:0};
+    qEmpty.style.display = 'none';
+    qImg.style.display = 'block';
+    qImg.src = entry.url;
+    qImg.style.transform = 'scale(1)';
+    qZoom.value = 1;
+    qBrightness.value = a.brightness;
+    qContrast.value = a.contrast;
+    qSaturation.value = a.saturation;
+  }
+
+  function qualityStep(dir){
+    if(!qualitySelectedId && state.generated.length){ selectQualityEntry(state.generated[0].id); return; }
+    if(!state.generated.length) return;
+    let idx = state.generated.findIndex(g=>g.id===qualitySelectedId);
+    idx = (idx + dir + state.generated.length) % state.generated.length;
+    selectQualityEntry(state.generated[idx].id);
+  }
+  document.getElementById('qualityPrev').addEventListener('click', ()=>qualityStep(-1));
+  document.getElementById('qualityNext').addEventListener('click', ()=>qualityStep(1));
+
+  qZoom.addEventListener('input', ()=>{ qImg.style.transform = `scale(${qZoom.value})`; });
+
+  async function applyQualityAdjust(){
+    const entry = state.generated.find(g=>g.id===qualitySelectedId);
+    if(!entry) return;
+    const adjust = {
+      brightness: Number(qBrightness.value),
+      contrast: Number(qContrast.value),
+      saturation: Number(qSaturation.value)
+    };
+    if(adjust.brightness || adjust.contrast || adjust.saturation) entry.overrides.__adjust = adjust;
+    else delete entry.overrides.__adjust;
+    const row = state.sheetRows[entry.rowIndex];
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    URL.revokeObjectURL(entry.url);
+    entry.blob = blob;
+    entry.url = URL.createObjectURL(blob);
+    qImg.src = entry.url;
+    refreshOutputItemEl(entry);
+  }
+  [qBrightness, qContrast, qSaturation].forEach(input=>{
+    input.addEventListener('change', applyQualityAdjust);
+  });
+  document.querySelectorAll('[data-adjust]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.adjust;
+      const dir = Number(btn.dataset.dir);
+      const input = key==='zoom' ? qZoom : key==='brightness' ? qBrightness : key==='contrast' ? qContrast : qSaturation;
+      const step = key==='zoom' ? 0.1 : 5;
+      const v = Math.max(Number(input.min), Math.min(Number(input.max), Number(input.value) + dir*step));
+      input.value = v;
+      input.dispatchEvent(new Event(key==='zoom' ? 'input' : 'change'));
+    });
+  });
+  document.getElementById('qualityReset').addEventListener('click', async ()=>{
+    if(!qualitySelectedId) return;
+    qZoom.value = 1; qImg.style.transform = 'scale(1)';
+    qBrightness.value = 0; qContrast.value = 0; qSaturation.value = 0;
+    await applyQualityAdjust();
+  });
+  document.getElementById('qualityEditContent').addEventListener('click', ()=>{
+    if(qualitySelectedId) openEditModal(qualitySelectedId);
+  });
 
   document.getElementById('btnRegenerate').addEventListener('click', generateAll);
 
@@ -2479,7 +2979,7 @@
     if(!entry) return;
     const kept = {};
     Object.keys(entry.overrides).forEach(k=>{
-      if(k.endsWith('__transform')) kept[k] = entry.overrides[k];
+      if(k.endsWith('__transform') || k==='__adjust') kept[k] = entry.overrides[k];
     });
     entry.overrides = kept;
     const row = state.sheetRows[entry.rowIndex];
@@ -2509,6 +3009,7 @@
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
     refreshOutputItemEl(entry);
+    if(qualitySelectedId===entry.id) qImg.src = entry.url;
 
     const fname = `${entry.baseName}.${extFor(entry.format)}`;
     const a = document.createElement('a');
@@ -2521,12 +3022,6 @@
     closeEditModal();
   });
 
-  document.querySelector('[data-step="4"]').addEventListener('click', ()=>{
-    if(!state.generated.length && state.sheetRows.length) generateAll();
-  });
-  document.getElementById('toStep4') && document.getElementById('toStep4').addEventListener('click', ()=>{
-    setTimeout(()=>{ if(!state.generated.length && state.sheetRows.length) generateAll(); }, 50);
-  });
 
   /* ===================== SAVE / LOAD PROJECT (local + file-based "cloud") ===================== */
   const LS_KEY = 'adapt_tool_project_v1';
@@ -2549,6 +3044,7 @@
   }
 
   function serializeProject(){
+    syncActiveTemplateIntoList();
     return {
       version: 1,
       savedAt: Date.now(),
@@ -2564,7 +3060,11 @@
       columnMap: state.columnMap,
       filenameColumn: state.filenameColumn,
       removeBackgroundByType: state.removeBackgroundByType,
-      bgRemovalQuality: state.bgRemovalQuality,
+      bgRemovalColorSource: state.bgRemovalColorSource,
+      bgRemovalBgColor: state.bgRemovalBgColor,
+      bgRemovalTolerance: state.bgRemovalTolerance,
+      bgRemovalFringePx: state.bgRemovalFringePx,
+      bgRemovalEdgeZonePx: state.bgRemovalEdgeZonePx,
       bgRemovalTrim: state.bgRemovalTrim,
       bgRemovalFill: state.bgRemovalFill,
       bgRemovalFillColor: state.bgRemovalFillColor,
@@ -2573,7 +3073,9 @@
         visible: sourceBadge.style.display === 'flex',
         icon: document.getElementById('sourceBadgeIcon').textContent,
         name: document.getElementById('sourceBadgeName').textContent
-      }
+      },
+      templates: state.templates,
+      activeTemplateId: state.activeTemplateId
     };
   }
 
@@ -2598,7 +3100,11 @@
         layerSeq = data.layerSeq || 1;
         fontSeq = data.fontSeq || 1;
         state.removeBackgroundByType = data.removeBackgroundByType || {image:false, logo:false};
-        state.bgRemovalQuality = data.bgRemovalQuality || 'medium';
+        state.bgRemovalColorSource = data.bgRemovalColorSource || 'auto';
+        state.bgRemovalBgColor = data.bgRemovalBgColor || '#ffffff';
+        state.bgRemovalTolerance = data.bgRemovalTolerance !== undefined ? data.bgRemovalTolerance : 50;
+        state.bgRemovalFringePx = data.bgRemovalFringePx !== undefined ? data.bgRemovalFringePx : 2;
+        state.bgRemovalEdgeZonePx = data.bgRemovalEdgeZonePx !== undefined ? data.bgRemovalEdgeZonePx : 6;
         state.bgRemovalTrim = data.bgRemovalTrim !== undefined ? data.bgRemovalTrim : true;
         state.bgRemovalFill = !!data.bgRemovalFill;
         state.bgRemovalFillColor = data.bgRemovalFillColor || '#ffffff';
@@ -2608,13 +3114,22 @@
         state.customFonts = [];
         elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
         elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
-        elBgRemoveQuality.value = state.bgRemovalQuality;
+        elBgRemoveColorSource.value = state.bgRemovalColorSource;
+        elBgRemoveManualColorField.style.display = state.bgRemovalColorSource==='manual' ? 'block' : 'none';
+        elBgRemoveBgColor.value = state.bgRemovalBgColor;
+        elBgRemoveBgColorSwatch.value = state.bgRemovalBgColor;
+        elBgRemoveTolerance.value = state.bgRemovalTolerance;
+        elBgRemoveFringePx.value = state.bgRemovalFringePx;
+        elBgRemoveEdgeZonePx.value = state.bgRemovalEdgeZonePx;
         elBgRemoveTrimToggle.checked = state.bgRemovalTrim;
         elBgRemoveFillToggle.checked = state.bgRemovalFill;
         elBgRemoveFillColorField.style.display = state.bgRemovalFill ? 'block' : 'none';
         elBgRemoveFillColor.value = state.bgRemovalFillColor;
         elBgRemoveFillColorSwatch.value = state.bgRemovalFillColor;
         updateBgRemovalStatusText();
+        state.templates = data.templates || [];
+        state.activeTemplateId = data.activeTemplateId || null;
+        renderTemplateStrip();
         const exportFmtSel = document.getElementById('exportFormatSelect');
         if(exportFmtSel && data.exportFormat) exportFmtSel.value = data.exportFormat;
 
@@ -2628,8 +3143,6 @@
             document.getElementById('hasHeaderRow').checked = !!data.hasHeaderRow;
             applyHeaderToggle();
             document.getElementById('mappingCard').style.display = 'block';
-            document.getElementById('toStep4').disabled = false;
-            unlockStep(4);
             if(document.getElementById('filenameColumn')){
               document.getElementById('filenameColumn').value = (state.filenameColumn===''||state.filenameColumn===undefined) ? '' : String(state.filenameColumn);
             }
