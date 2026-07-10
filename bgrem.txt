@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""
+bgrem.py — Remove background from an image.
+
+Modes:
+  auto   : use rembg AI (best for photos with people/objects)
+  color  : auto-detect dominant background color and remove it (best for logos/graphics)
+
+Usage:
+  python bgrem.py -i input.jpg -o output.png
+  python bgrem.py -i input.jpg -o output.png --fill-color 180,180,180
+  python bgrem.py -i input.jpg -o output.png --bg-color 0,0,0  # override auto-detect
+
+Install:
+  pip install rembg[cpu] pillow numpy scipy
+"""
+
+import argparse
+import sys
+from pathlib import Path
+from collections import Counter
+
+import numpy as np
+from PIL import Image
+from scipy.ndimage import binary_dilation
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Remove background from an image.")
+    parser.add_argument("-i", "--input",  required=True,  type=str, help="Input image path.")
+    parser.add_argument("-o", "--output", required=True,  type=str, help="Output image path (.png recommended).")
+    parser.add_argument(
+        "--mode", type=str, default="color", choices=["auto", "color"],
+        help="'auto' uses rembg AI (good for photos). 'color' removes dominant background color (good for logos). Default: color."
+    )
+
+    # ── color-mode options ──────────────────────────────────────────────────
+    parser.add_argument("--bg-color",    type=str, default=None,          help="R,G,B to force as background color. If omitted, auto-detected from image edges.")
+    parser.add_argument("--tolerance",   type=int, default=50,            help="Per-channel tolerance for background color matching (0-255). Default: 50.")
+    parser.add_argument("--fill-color",  type=str, default="255,255,255", help="R,G,B fill color for the background. Default: 180,180,180 (ash grey).")
+    parser.add_argument("--fringe-px",   type=int, default=2,             help="Dilation pixels for fringe blending at logo edges. Default: 2.")
+    parser.add_argument("--edge-zone",   type=int, default=6,             help="Dilation pixels for stray pixel cleanup zone. Default: 6.")
+    parser.add_argument("--transparent", action="store_true",             help="Make background transparent instead of filling with --fill-color.")
+
+    # ── rembg / auto-mode options ───────────────────────────────────────────
+    parser.add_argument(
+        "--model", type=str, default="isnet-general-use",
+        choices=["u2net","u2netp","u2net_human_seg","u2net_cloth_seg",
+                 "silueta","isnet-general-use","isnet-anime",
+                 "birefnet-general","birefnet-general-lite","birefnet-portrait"],
+        help="rembg model (auto mode only). Default: isnet-general-use."
+    )
+    parser.add_argument("--no-alpha-matting",     action="store_true")
+    parser.add_argument("--foreground-threshold", type=int, default=240)
+    parser.add_argument("--background-threshold", type=int, default=10)
+    parser.add_argument("--erode-size",           type=int, default=10)
+    parser.add_argument("--no-post-process-mask", action="store_true")
+    return parser.parse_args()
+
+
+def parse_color(s):
+    parts = [int(x.strip()) for x in s.split(",")]
+    if len(parts) != 3:
+        raise ValueError(f"Expected R,G,B but got: {s}")
+    return tuple(parts)
+
+
+def detect_bg_color(arr):
+    """
+    Sample pixels from the 4 edges of the image, quantize to buckets of 10,
+    and return the most common color as (R, G, B).
+    """
+    h, w = arr.shape[:2]
+
+    edge_pixels = np.concatenate([
+        arr[0,   :,   :3],   # top row
+        arr[h-1, :,   :3],   # bottom row
+        arr[:,   0,   :3],   # left col
+        arr[:,   w-1, :3],   # right col
+    ], axis=0)
+
+    # Quantize to buckets of 10 to group near-identical shades together
+    quantized = (edge_pixels // 10 * 10)
+    tuples    = [tuple(p) for p in quantized]
+    dominant  = Counter(tuples).most_common(1)[0][0]
+    return dominant
+
+
+def remove_by_color(img_rgba, bg_rgb, tolerance, fill_rgb, transparent, fringe_px, edge_zone_px):
+    arr  = np.array(img_rgba, dtype=np.int32)
+    r, g, b = bg_rgb
+    fill = np.array(fill_rgb, dtype=np.int32)
+
+    # ── Step 1: Core background mask ─────────────────────────────────────────
+    bg_mask = (
+        (np.abs(arr[:,:,0] - r) <= tolerance) &
+        (np.abs(arr[:,:,1] - g) <= tolerance) &
+        (np.abs(arr[:,:,2] - b) <= tolerance)
+    )
+
+    out = arr.copy()
+
+    if transparent:
+        out[bg_mask, 3] = 0
+    else:
+        out[bg_mask, 0] = fill[0]
+        out[bg_mask, 1] = fill[1]
+        out[bg_mask, 2] = fill[2]
+        out[bg_mask, 3] = 255
+
+        # ── Step 2: Fringe blending — smooth JPEG anti-alias edge pixels ─────
+        expanded = binary_dilation(bg_mask, iterations=fringe_px)
+        fringe   = expanded & ~bg_mask
+        fp       = out[fringe].astype(float)
+
+        # Similarity of each fringe pixel to the bg color
+        diff     = np.abs(fp[:, :3] - np.array([r, g, b], dtype=float))
+        sim      = np.clip(1.0 - diff.mean(axis=1) / 128.0, 0, 1)
+        sim      = np.clip(sim * 2.5, 0, 1)
+        for c in range(3):
+            fp[:, c] = fp[:, c] * (1 - sim) + fill[c] * sim
+        out[fringe] = fp.astype(np.int32)
+
+        # ── Step 3: Stray pixel cleanup within edge zone ──────────────────────
+        edge_zone = binary_dilation(bg_mask, iterations=edge_zone_px)
+        # A stray pixel is one that is still close to the bg color after blending
+        stray = (
+            (np.abs(out[:,:,0] - r) <= tolerance + 60) &
+            (np.abs(out[:,:,1] - g) <= tolerance + 60) &
+            (np.abs(out[:,:,2] - b) <= tolerance + 60)
+        )
+        cleanup = stray & edge_zone
+        out[cleanup, 0] = fill[0]
+        out[cleanup, 1] = fill[1]
+        out[cleanup, 2] = fill[2]
+        out[cleanup, 3] = 255
+
+    return Image.fromarray(out.astype(np.uint8), "RGBA")
+
+
+def remove_by_ai(img_rgba, args):
+    from rembg import remove, new_session
+    print(f"Loading model: {args.model} ...")
+    session = new_session(args.model)
+    print("Removing background (AI) ...")
+    return remove(
+        img_rgba,
+        session=session,
+        alpha_matting=not args.no_alpha_matting,
+        alpha_matting_foreground_threshold=args.foreground_threshold,
+        alpha_matting_background_threshold=args.background_threshold,
+        alpha_matting_erode_size=args.erode_size,
+        post_process_mask=not args.no_post_process_mask,
+    )
+
+
+def main():
+    args        = parse_args()
+    input_path  = Path(args.input)
+    output_path = Path(args.output)
+
+    if not input_path.exists():
+        print(f"Error: input file not found: {input_path}", file=sys.stderr)
+        sys.exit(1)
+
+    if output_path.suffix.lower() not in (".png",):
+        print(f"Warning: '{output_path.suffix}' doesn't support transparency — PNG is recommended.")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Reading: {input_path}")
+    with Image.open(input_path) as img:
+        img_rgba = img.convert("RGBA")
+
+    if args.mode == "color":
+        fill_rgb = parse_color(args.fill_color)
+
+        if args.bg_color:
+            bg_rgb = parse_color(args.bg_color)
+            print(f"Background color (manual): {bg_rgb}")
+        else:
+            arr    = np.array(img_rgba, dtype=np.int32)
+            bg_rgb = detect_bg_color(arr)
+            print(f"Background color (auto-detected from edges): {bg_rgb}")
+
+        print(f"Fill color: {fill_rgb}  |  Tolerance: {args.tolerance}")
+        result = remove_by_color(
+            img_rgba, bg_rgb, args.tolerance, fill_rgb,
+            args.transparent, args.fringe_px, args.edge_zone
+        )
+    else:
+        result = remove_by_ai(img_rgba, args)
+        if not args.transparent:
+            fill_rgb = parse_color(args.fill_color)
+            bg = Image.new("RGBA", result.size, fill_rgb + (255,))
+            bg.paste(result, mask=result.split()[3])
+            result = bg
+
+    # Flatten to RGB if saving as JPEG
+    if output_path.suffix.lower() in (".jpg", ".jpeg"):
+        fill_rgb = parse_color(args.fill_color)
+        bg = Image.new("RGB", result.size, fill_rgb)
+        bg.paste(result, mask=result.split()[3])
+        bg.save(output_path, quality=95)
+    else:
+        result.save(output_path)
+
+    print(f"Saved → {output_path}")
+
+
+if __name__ == "__main__":
+    main()
