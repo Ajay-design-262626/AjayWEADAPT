@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adapt — Template Adaptation Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/imgly-background-removal.browser.min.js"></script>
+<style>
+  :root{
+    --ink:#f1f1ef;
+    --paper:#2b2b2b;
+    --surface:#363636;
+    --surface-raised:#454545;
+    --line:#4a4a4a;
+    --line-strong:#606060;
+    --accent:#4d8fd1;
+    --accent-soft:#1f3b52;
+    --warn:#e07a64;
+    --muted:#a3a3a0;
+    --mono: 'SF Mono', 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica, Arial, sans-serif;
+    --radius: 4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .app{ max-width:1320px; margin:0 auto; padding:28px 28px 80px; }
+
+  /* ---------- header / steps ---------- */
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; gap:16px; flex-wrap:wrap;}
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{ width:9px; height:9px; background:var(--accent); display:inline-block; border-radius:1px; transform:translateY(-1px);}
+  .brand h1{ font-size:16px; font-weight:600; margin:0; letter-spacing:-0.01em; }
+  .brand .sub{ color:var(--muted); font-size:12.5px; }
+
+  .steps{ display:flex; gap:4px; }
+  .step-pill{
+    font-size:11.5px; font-weight:600; padding:6px 12px 6px 10px; border-radius:100px;
+    color:var(--muted); border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+    transition: all .12s ease;
+  }
+  .step-pill .n{ width:16px; height:16px; border-radius:50%; background:var(--line); color:var(--ink); font-size:10px; display:flex; align-items:center; justify-content:center; }
+  .step-pill.active{ color:var(--ink); border-color:var(--ink); background:var(--surface-raised); }
+  .step-pill.active .n{ background:var(--accent); }
+  .step-pill.done{ color:var(--accent); border-color:var(--accent-soft);}
+  .step-pill.done .n{ background:var(--accent); }
+  .step-pill[disabled]{ opacity:.4; cursor:not-allowed; }
+
+  section.panel{ display:none; }
+  section.panel.active{ display:block; }
+
+  /* ---------- generic card / layout ---------- */
+  .grid2{ display:grid; grid-template-columns: 1fr 320px; gap:24px; align-items:start; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+  .card + .card{ margin-top:16px; }
+  .card h2{ font-size:13px; font-weight:600; margin:0 0 4px; }
+  .card .hint{ font-size:12px; color:var(--muted); margin:0 0 14px; }
+  label.field{ display:block; margin-bottom:12px; }
+  label.field .lbl{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%; padding:7px 9px; border:1px solid var(--line-strong); border-radius:3px;
+    font-family:var(--sans); font-size:13px; background:var(--surface-raised); color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:50px; }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .color-field{ display:flex; gap:6px; align-items:stretch; }
+  .color-field input[type=color]{
+    width:34px; height:32px; padding:2px; border:1px solid var(--line-strong); border-radius:3px;
+    background:var(--surface-raised); cursor:pointer; flex-shrink:0;
+  }
+  .color-field input[type=text]{ flex:1; min-width:0; }
+
+  /* ---------- segmented icon control (Photoshop-style align buttons) ---------- */
+  .segmented{ display:flex; border:1px solid var(--line-strong); border-radius:3px; overflow:hidden; background:var(--surface-raised); width:fit-content; }
+  .segmented button{
+    display:flex; align-items:center; justify-content:center; width:34px; height:30px;
+    background:none; border:none; border-right:1px solid var(--line-strong); cursor:pointer;
+    color:var(--muted); transition: background .1s, color .1s;
+  }
+  .segmented button:last-child{ border-right:none; }
+  .segmented button svg{ width:16px; height:16px; display:block; }
+  .segmented button:hover{ background:var(--line); color:var(--ink); }
+  .segmented button.active{ background:var(--accent); color:#fff; }
+  .segmented button.active:hover{ background:var(--accent); }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+  button{ font-family:var(--sans); cursor:pointer; }
+  .btn{
+    border:1px solid var(--accent); background:var(--accent); color:#fff;
+    padding:9px 16px; border-radius:3px; font-size:13px; font-weight:600;
+  }
+  .btn:hover{ background:#5b9bdc; border-color:#5b9bdc; }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn.secondary{ background:var(--surface-raised); color:var(--ink); border-color:var(--line-strong); }
+  .btn.secondary:hover{ border-color:var(--ink); }
+  .btn.danger{ background:var(--surface-raised); color:var(--warn); border-color:#6b3f38; }
+  .btn.danger:hover{ background:#4a322e; }
+  .btn.small{ padding:5px 10px; font-size:12px; }
+  .btn.full{ width:100%; }
+
+  /* ---------- step 1: upload ---------- */
+  .dropzone{
+    border:1.5px dashed var(--line-strong); border-radius:var(--radius);
+    padding:60px 20px; text-align:center; cursor:pointer; background:var(--surface);
+    transition: border-color .12s, background .12s;
+  }
+  .dropzone:hover, .dropzone.drag{ border-color:var(--accent); background:var(--accent-soft); }
+  .dropzone .icon{ font-size:28px; margin-bottom:10px; }
+  .dropzone .ddtext{ font-size:13.5px; font-weight:600; margin-bottom:4px;}
+  .dropzone .ddsub{ font-size:12px; color:var(--muted); }
+
+  /* ---------- step 2: editor ---------- */
+  .editor-wrap{
+    background:#1e1e1e; border:1px solid var(--line); border-radius:var(--radius);
+    overflow:auto; max-height:72vh; padding:16px; display:flex; justify-content:center;
+  }
+  .canvas-stage{ position:relative; box-shadow:0 1px 3px rgba(0,0,0,.4); flex-shrink:0; }
+  .canvas-stage canvas.bg{ display:block; }
+  .box{
+    position:absolute; border:1.5px solid var(--accent); background:rgba(77,143,209,.12);
+    cursor:move; box-sizing:border-box;
+  }
+  .box.selected{ border-color:var(--warn); background:rgba(224,122,100,.14); z-index:5; }
+  .box .box-label{
+    position:absolute; top:-20px; left:-1.5px; background:var(--accent); color:#fff;
+    font-size:10.5px; font-weight:700; padding:2px 6px; white-space:nowrap; border-radius:2px 2px 0 0;
+    pointer-events:none;
+  }
+  .box.selected .box-label{ background:var(--warn); }
+  .box .handle{
+    position:absolute; width:9px; height:9px; background:var(--warn); border:1px solid #fff;
+    right:-5px; bottom:-5px; cursor:nwse-resize; border-radius:1px;
+  }
+  .box.image-type{ border-style:solid; }
+  .box.logo-type{ border-style:dashed; }
+
+  /* ---------- layer tabs ---------- */
+  .layer-tabs{ display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid var(--line); }
+  .layer-tab{
+    flex:1; text-align:center; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    padding:9px 4px; background:none; border:none; color:var(--muted); cursor:pointer;
+    border-bottom:2px solid transparent; margin-bottom:-1px; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .layer-tab .tab-swatch{ width:7px; height:7px; border-radius:1px; }
+  .layer-tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
+  .layer-tab .tab-count{ background:var(--line); color:var(--ink); font-size:10px; font-weight:700; padding:1px 5px; border-radius:100px; }
+  .layer-tab.active .tab-count{ background:var(--accent); color:#fff; }
+
+  .layer-list{ display:flex; flex-direction:column; gap:6px; }
+  .layer-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:3px; background:var(--surface-raised); cursor:pointer; font-size:12.5px;
+  }
+  .layer-item.selected{ border-color:var(--warn); background:#4a3530; }
+  .layer-item .swatch{ width:9px; height:9px; border-radius:1px; flex-shrink:0; }
+  .layer-item .swatch.text{ background:var(--accent); }
+  .layer-item .swatch.image{ background:#6fa0d8; }
+  .layer-item .swatch.logo{ background:#c9a35e; }
+  .layer-item .lname{ flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .layer-item .ltype{ color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; }
+  .layer-item .ldel{ color:var(--muted); background:none; border:none; font-size:14px; padding:0 2px; line-height:1; }
+  .layer-item .ldel:hover{ color:var(--warn); }
+
+  .addrow{ display:flex; gap:6px; margin-top:10px; }
+  .addrow select{ flex:1; }
+
+  /* ---------- font manager ---------- */
+  .font-list{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  .font-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:3px; background:var(--surface-raised); font-size:12.5px;
+  }
+  .font-item .fi-name{ flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .font-item .fi-file{ color:var(--muted); font-size:10.5px; font-family:var(--mono); }
+  .font-item .fdel{ color:var(--muted); background:none; border:none; font-size:14px; padding:0 2px; line-height:1; }
+  .font-item .fdel:hover{ color:var(--warn); }
+  .font-upload-row{ display:flex; gap:6px; align-items:center; }
+  .font-upload-row input[type=text]{ flex:1; }
+  .font-status{ font-size:11px; color:var(--muted); margin-top:6px; }
+  .font-status.err{ color:var(--warn); }
+
+  .source-badge{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line-strong);
+    border-radius:3px; background:var(--surface-raised); margin-bottom:16px;
+  }
+  .source-badge .sb-icon{ font-size:18px; flex-shrink:0; }
+  .source-badge .sb-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .source-badge .sb-label{ font-size:10px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700; }
+  .source-badge .sb-name{ font-size:12.5px; color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .empty-note{ font-size:12px; color:var(--muted); text-align:center; padding:18px 6px; border:1px dashed var(--line); border-radius:3px;}
+
+  /* ---------- step 3: sheet mapping ---------- */
+  table.maptable{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.maptable th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.maptable td{ padding:7px 8px; border-bottom:1px solid var(--line); }
+  table.maptable tr:last-child td{ border-bottom:none; }
+  .col-tag{ display:inline-flex; align-items:center; gap:5px; font-weight:600; font-size:12px; }
+  .col-tag .swatch{ width:8px; height:8px; border-radius:1px; }
+
+  .preview-rows{ max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:3px; margin-top:14px; }
+  table.datapeek{ width:100%; border-collapse:collapse; font-size:11.5px; font-family:var(--mono); }
+  table.datapeek th, table.datapeek td{ padding:5px 8px; border-bottom:1px solid var(--line); white-space:nowrap; max-width:160px; overflow:hidden; text-overflow:ellipsis; text-align:left;}
+  table.datapeek th{ background:#f5f4f0; position:sticky; top:0; }
+
+  /* ---------- step 4: generate ---------- */
+  .progress-wrap{ display:flex; align-items:center; gap:12px; margin:14px 0; }
+  .progress-track{ flex:1; height:6px; background:var(--line); border-radius:10px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width .15s; }
+  .progress-text{ font-size:12px; color:var(--muted); font-family:var(--mono); white-space:nowrap; }
+
+  .image-fail-banner{
+    background:rgba(224,122,100,.12); border:1px solid rgba(224,122,100,.4); border-radius:3px;
+    padding:12px 14px; margin:14px 0; font-size:12.5px; color:var(--ink);
+  }
+  .image-fail-banner .ifb-title{ font-weight:700; color:var(--warn); margin-bottom:6px; display:block; }
+  .image-fail-banner ul{ margin:6px 0 0; padding-left:18px; }
+  .image-fail-banner li{ margin-bottom:3px; word-break:break-all; font-family:var(--mono); font-size:11px; color:var(--muted); }
+  .image-fail-banner .ifb-tip{ margin-top:8px; color:var(--muted); }
+
+  .output-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px; }
+  .output-item{ border:1px solid var(--line); border-radius:3px; overflow:hidden; background:var(--surface-raised); position:relative; }
+  .output-item .oi-thumb{ position:relative; cursor:pointer; }
+  .output-item .oi-thumb:hover::after{
+    content:'Click to edit'; position:absolute; inset:0; background:rgba(0,0,0,.55); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;
+  }
+  .output-item img{ width:100%; display:block; background:#1e1e1e; }
+  .output-item .edited-badge{
+    position:absolute; top:6px; left:6px; background:var(--warn); color:#fff; font-size:10px; font-weight:700;
+    padding:2px 6px; border-radius:100px; z-index:2; text-transform:uppercase; letter-spacing:.02em;
+  }
+  .output-item .oi-foot{ padding:6px 8px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between; gap:6px; align-items:center; }
+  .output-item .oi-foot a{ color:var(--accent); text-decoration:none; font-weight:600; flex-shrink:0; }
+  .output-item .oi-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .output-item .oi-actions{ display:flex; gap:4px; align-items:center; flex-shrink:0; }
+  .output-item .oi-fmt{ font-size:10px; border:1px solid var(--line-strong); border-radius:2px; padding:1px 3px; background:var(--surface); color:var(--ink); }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+  .toolbar .left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  /* ---------- edit-export modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:100;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{ background:var(--surface); border-radius:6px; max-width:760px; width:100%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line); }
+  .modal-head h2{ margin:0; font-size:14px; }
+  .modal-body{ display:grid; grid-template-columns:1fr 1fr; gap:0; overflow:auto; flex:1; }
+  .modal-preview{ background:#1e1e1e; display:flex; align-items:center; justify-content:center; padding:16px; border-right:1px solid var(--line); }
+  .modal-preview img{ max-width:100%; max-height:60vh; box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  .modal-fields{ padding:16px 20px; overflow:auto; }
+  .modal-fields .mf-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:5px; display:block; }
+  .modal-fields .mf-row{ margin-bottom:14px; }
+  .modal-fields .mf-tag{ font-size:10px; color:var(--muted); font-weight:600; margin-bottom:3px; display:block; }
+
+  /* ---------- image reposition/zoom control (inside edit modal) ---------- */
+  .reposition-stage{
+    position:relative; width:100%; max-width:280px; overflow:hidden; border-radius:3px;
+    background:#000; cursor:grab; touch-action:none; border:1px solid var(--line-strong);
+  }
+  .reposition-stage.dragging{ cursor:grabbing; }
+  .reposition-stage img{ position:absolute; max-width:none; max-height:none; user-select:none; pointer-events:none; }
+  .reposition-zoom-row{ display:flex; align-items:center; gap:8px; margin-top:8px; max-width:280px; }
+  .reposition-zoom-row input[type=range]{ flex:1; }
+  .reposition-zoom-row .zoom-label{ font-size:11px; color:var(--muted); font-family:var(--mono); width:38px; text-align:right; flex-shrink:0; }
+  .reposition-hint{ font-size:11px; color:var(--muted); margin-top:6px; }
+  .modal-foot{ display:flex; align-items:center; gap:8px; padding:14px 20px; border-top:1px solid var(--line); }
+  @media (max-width: 640px){ .modal-body{ grid-template-columns:1fr; } .modal-preview{ border-right:none; border-bottom:1px solid var(--line); } }
+
+  .footer-nav{ display:flex; justify-content:space-between; margin-top:24px; }
+
+  .badge-count{ background:var(--accent-soft); color:var(--accent); font-size:11px; font-weight:700; padding:2px 7px; border-radius:100px; }
+
+  /* ---------- background removal toggle ---------- */
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  .toggle-row .tr-text{ display:flex; flex-direction:column; gap:2px; }
+  .toggle-row .tr-label{ font-size:12.5px; font-weight:600; color:var(--ink); }
+  .toggle-row .tr-sub{ font-size:11px; color:var(--muted); }
+  .switch{ position:relative; display:inline-block; width:38px; height:22px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .slider{
+    position:absolute; cursor:pointer; inset:0; background:var(--line-strong);
+    border-radius:100px; transition:background .15s;
+  }
+  .switch .slider::before{
+    content:''; position:absolute; width:16px; height:16px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:transform .15s;
+  }
+  .switch input:checked + .slider{ background:var(--accent); }
+  .switch input:checked + .slider::before{ transform:translateX(16px); }
+  .switch input:disabled + .slider{ opacity:.5; cursor:not-allowed; }
+  .bg-removal-status{ font-size:11px; color:var(--muted); margin-top:-4px; margin-bottom:12px; min-height:14px; }
+  .bg-removal-status.err{ color:var(--warn); }
+
+  .oi-thumb .bgr-pill{
+    position:absolute; top:6px; right:6px; background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    padding:2px 6px; border-radius:100px; z-index:2; text-transform:uppercase; letter-spacing:.02em;
+  }
+
+  ::selection{ background: rgba(58,90,64,.25); }
+
+  @media (max-width: 900px){
+    .grid2{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- project save/load bar ---------- */
+  .projectbar{
+    display:flex; align-items:center; gap:8px; margin:-14px 0 20px; flex-wrap:wrap;
+  }
+  .projectbar .save-status{ font-size:11.5px; color:var(--muted); }
+  .projectbar .save-status.err{ color:var(--warn); }
+  .resume-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--accent-soft); border:1px solid var(--accent); border-radius:var(--radius);
+    padding:12px 14px; margin-bottom:20px; font-size:12.5px;
+  }
+
+  /* ---------- undo/redo ---------- */
+  .undo-redo{ display:flex; gap:4px; }
+  .undo-redo button{
+    display:flex; align-items:center; justify-content:center; width:30px; height:30px;
+    border:1px solid var(--line-strong); background:var(--surface-raised); color:var(--ink);
+    border-radius:3px;
+  }
+  .undo-redo button:hover:not(:disabled){ border-color:var(--ink); }
+  .undo-redo button:disabled{ opacity:.35; cursor:not-allowed; }
+  .undo-redo button svg{ width:15px; height:15px; display:block; }
+
+  /* ---------- sticky editor column (step 2) ---------- */
+  #panel-2 .grid2 > div:first-child{
+    position:sticky; top:16px; align-self:start;
+  }
+  #panel-2 .grid2 > div:last-child{
+    max-height: calc(100vh - 32px); overflow-y:auto; padding-right:6px;
+  }
+  @media (max-width: 900px){
+    #panel-2 .grid2 > div:first-child{ position:static; }
+    #panel-2 .grid2 > div:last-child{ max-height:none; overflow-y:visible; }
+  }
+
+  /* ---------- rename controls (step 4) ---------- */
+  .rename-all-bar{
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0 4px;
+    padding:12px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface);
+  }
+  .rename-all-bar input[type=text], .rename-all-bar input[type=number]{ width:auto; flex:1; min-width:100px; }
+  .rename-all-bar .rl{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; margin-right:-4px; }
+  .oi-name-wrap{ display:flex; align-items:center; gap:2px; flex:1; min-width:0; }
+  .oi-name-input{
+    border:1px solid transparent; background:transparent; color:var(--ink); font-size:12px;
+    padding:2px 4px; border-radius:2px; width:100%; min-width:0;
+  }
+  .oi-name-input:hover{ border-color:var(--line-strong); }
+  .oi-name-input:focus{ border-color:var(--accent); background:var(--surface-raised); outline:none; }
+  .oi-ext{ font-size:12px; color:var(--muted); flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark"></span>
+      <h1>Adapt</h1>
+      <span class="sub">Template adaptation tool</span>
+    </div>
+    <div class="steps" id="steps">
+      <button class="step-pill active" data-step="1"><span class="n">1</span> Template</button>
+      <button class="step-pill" data-step="2" disabled><span class="n">2</span> Layout</button>
+      <button class="step-pill" data-step="3" disabled><span class="n">3</span> Data</button>
+      <button class="step-pill" data-step="4" disabled><span class="n">4</span> Generate</button>
+    </div>
+  </div>
+
+  <div class="projectbar">
+    <div class="undo-redo" title="Undo / Redo">
+      <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+      </button>
+      <button id="btnRedo" disabled title="Redo (Ctrl+Y)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+      </button>
+    </div>
+    <button class="btn secondary small" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
+    <button class="btn secondary small" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">⭳ Export project file</button>
+    <button class="btn secondary small" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import project file</button>
+    <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
+    <span class="save-status" id="saveStatus"></span>
+  </div>
+
+  <div class="resume-banner" id="resumeBanner" style="display:none;">
+    <span id="resumeBannerText"></span>
+    <div style="display:flex; gap:8px; flex-shrink:0;">
+      <button class="btn small" id="btnResumeProject">Resume</button>
+      <button class="btn secondary small" id="btnDiscardProject">Discard</button>
+    </div>
+  </div>
+
+  <section class="panel active" id="panel-1">
+    <div class="grid2" style="grid-template-columns:1fr;">
+      <div>
+        <div class="card">
+          <h2>1. Upload your template background</h2>
+          <p class="hint">Export the flattened PSD as a PNG or JPG (File → Export → Export As… in Photoshop). This is the static background every adaptation will be built on top of.</p>
+          <div class="dropzone" id="dropzone">
+            <div class="icon">＋</div>
+            <div class="ddtext">Drop a PNG or JPG here, or click to browse</div>
+            <div class="ddsub">One template at a time · PNG / JPG · any size</div>
+          </div>
+          <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-2">
+    <div class="grid2">
+      <div>
+        <div class="card" style="padding:12px;">
+          <div class="toolbar" style="margin-bottom:8px;">
+            <div class="left">
+              <strong style="font-size:12.5px;">Draw a box, then tag it</strong>
+              <span class="hint" style="margin:0;">Drag on the image to create a box. Drag a box to move it, the corner handle to resize.</span>
+            </div>
+            <button class="btn secondary small" id="btnNewTemplate">Change template image</button>
+          </div>
+          <div class="editor-wrap">
+            <div class="canvas-stage" id="canvasStage">
+              <canvas class="bg" id="bgCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h2>Layers <span class="badge-count" id="layerCount">0</span></h2>
+          <p class="hint">Each box becomes a field your spreadsheet fills in. Grouped by type below.</p>
+          <div class="layer-tabs" id="layerTabs">
+            <button class="layer-tab active" data-tab="text"><span class="tab-swatch" style="background:var(--accent)"></span>Text <span class="tab-count" id="countText">0</span></button>
+            <button class="layer-tab" data-tab="image"><span class="tab-swatch" style="background:#4a6fa5"></span>Images <span class="tab-count" id="countImage">0</span></button>
+            <button class="layer-tab" data-tab="logo"><span class="tab-swatch" style="background:#9a7b3f"></span>Logos <span class="tab-count" id="countLogo">0</span></button>
+          </div>
+          <div class="layer-list" id="layerList"></div>
+          <div class="empty-note" id="layerEmptyNote">Draw a box on the template, tagged as this type, to add a layer here.</div>
+        </div>
+
+        <div class="card" id="fontManagerCard">
+          <h2>Template fonts</h2>
+          <p class="hint">Upload the .ttf/.otf files used in this PSD so text renders in the real typeface.</p>
+          <div class="font-list" id="fontList"></div>
+          <div class="font-upload-row">
+            <input type="text" id="fontFriendlyName" placeholder="Name this font, e.g. Brand Bold">
+            <button class="btn secondary small" id="btnUploadFont">Upload file</button>
+          </div>
+          <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+          <div class="font-status" id="fontStatus"></div>
+        </div>
+
+        <div class="card" id="layerDetailCard" style="display:none;">
+          <h2>Layer settings</h2>
+          <label class="field">
+            <span class="lbl">Field name</span>
+            <input type="text" id="layerName" placeholder="e.g. headline">
+          </label>
+          <label class="field">
+            <span class="lbl">Type</span>
+            <select id="layerType">
+              <option value="text">Text</option>
+              <option value="image">Image</option>
+              <option value="logo">Logo</option>
+            </select>
+          </label>
+
+          <div id="textOptions">
+            <div class="row2">
+              <label class="field">
+                <span class="lbl">Font size (px)</span>
+                <input type="number" id="fontSize" value="32" min="6">
+              </label>
+              <label class="field">
+                <span class="lbl">Font weight</span>
+                <select id="fontWeight">
+                  <option value="400">Regular</option>
+                  <option value="600">Semibold</option>
+                  <option value="700" selected>Bold</option>
+                  <option value="800">Extra bold</option>
+                </select>
+              </label>
+            </div>
+            <div class="row2">
+              <label class="field">
+                <span class="lbl">Color</span>
+                <div class="color-field">
+                  <input type="color" id="fontColorSwatch" value="#1a1a18">
+                  <input type="text" id="fontColor" value="#1a1a18" placeholder="#1a1a18">
+                </div>
+              </label>
+              <label class="field">
+                <span class="lbl">Align</span>
+                <div class="segmented" id="textAlignSeg" role="group" aria-label="Text alignment">
+                  <button type="button" data-value="left" title="Align left">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="10" y2="8"/><line x1="2" y1="12" x2="13" y2="12"/></svg>
+                  </button>
+                  <button type="button" data-value="center" class="active" title="Align center">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="4" y1="8" x2="12" y2="8"/><line x1="3" y1="12" x2="13" y2="12"/></svg>
+                  </button>
+                  <button type="button" data-value="right" title="Align right">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="3" y1="12" x2="14" y2="12"/></svg>
+                  </button>
+                </div>
+                <input type="hidden" id="textAlign" value="center">
+              </label>
+            </div>
+            <label class="field">
+              <span class="lbl">Font family</span>
+              <select id="fontFamily">
+                <option value="-apple-system, Helvetica, Arial, sans-serif">System sans (default)</option>
+                <option value="Georgia, 'Times New Roman', serif">Serif (default)</option>
+                <option value="'Courier New', monospace">Monospace (default)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="lbl">Vertical position</span>
+              <div class="segmented" id="vAlignSeg" role="group" aria-label="Vertical position">
+                <button type="button" data-value="top" title="Align top">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="3" x2="14" y2="3"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="6" y1="11" x2="10" y2="11"/></svg>
+                </button>
+                <button type="button" data-value="middle" class="active" title="Align middle">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="5" x2="13" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="5" y1="11" x2="11" y2="11"/></svg>
+                </button>
+                <button type="button" data-value="bottom" title="Align bottom">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="5" x2="10" y2="5"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="2" y1="13" x2="14" y2="13"/></svg>
+                </button>
+              </div>
+              <input type="hidden" id="vAlign" value="middle">
+            </label>
+            <p class="hint" style="margin-top:-4px;">Long text auto-shrinks to fit the box width, then wraps.</p>
+          </div>
+
+          <div id="imageOptions" style="display:none;">
+            <label class="field">
+
+              <span class="lbl">Fit</span>
+              <select id="imageFit">
+                <option value="cover" selected>Cover (fill box, crop overflow)</option>
+                <option value="contain">Contain (fit inside box)</option>
+              </select>
+            </label>
+            <p class="hint" style="margin-top:-4px;">Background removal for this field type is set in the "Background removal" panel above, not per box.</p>
+          </div>
+
+          <div class="row2">
+            <label class="field"><span class="lbl">X</span><input type="number" id="boxX"></label>
+            <label class="field"><span class="lbl">Y</span><input type="number" id="boxY"></label>
+          </div>
+          <div class="row2">
+            <label class="field"><span class="lbl">Width</span><input type="number" id="boxW"></label>
+            <label class="field"><span class="lbl">Height</span><input type="number" id="boxH"></label>
+          </div>
+
+          <button class="btn danger full" id="btnDeleteLayer">Delete this layer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="btn secondary" data-goto="1">← Back</button>
+      <button class="btn" id="toStep3" disabled>Continue to data →</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-3">
+    <div class="card">
+      <h2>2. Upload your content spreadsheet</h2>
+
+      <div class="source-badge" id="sourceBadge" style="display:none;">
+        <span class="sb-icon" id="sourceBadgeIcon">📄</span>
+        <div class="sb-text">
+          <span class="sb-label">Currently loaded</span>
+          <span class="sb-name" id="sourceBadgeName"></span>
+        </div>
+        <button class="btn secondary small" id="btnReplaceSource">Replace</button>
+        <button class="btn danger small" id="btnCancelSource">Cancel</button>
+      </div>
+
+      <div id="sourcePickers">
+        <p class="hint">Every row is one banner. Map each layer to a column letter (A, B, C…) — no specific header names required. Use links (URLs) for images and logos. Accepts .xlsx, .xls, or .csv.</p>
+        <div class="dropzone" id="dropzoneSheet">
+          <div class="icon">📄</div>
+          <div class="ddtext">Drop your spreadsheet here, or click to browse</div>
+          <div class="ddsub">Columns are read as A, B, C… by default</div>
+        </div>
+        <input type="file" id="sheetInput" accept=".xlsx,.xls,.csv" style="display:none">
+
+        <div style="display:flex; align-items:center; gap:10px; margin:16px 0;">
+          <div style="flex:1; height:1px; background:var(--line);"></div>
+          <span style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;">or</span>
+          <div style="flex:1; height:1px; background:var(--line);"></div>
+        </div>
+
+        <label class="field">
+          <span class="lbl">Paste a Google Sheet link</span>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/...">
+            <button class="btn secondary" id="btnLoadSheetUrl" style="flex-shrink:0;">Load sheet</button>
+          </div>
+        </label>
+        <p class="hint" style="margin-top:-6px;">The sheet must be shared as "Anyone with the link can view." We read the live data each time you click Load.</p>
+        <div class="font-status" id="sheetUrlStatus"></div>
+      </div>
+
+      <label class="field" style="margin-top:14px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <input type="checkbox" id="hasHeaderRow" style="width:auto;">
+        <span style="font-size:12.5px; font-weight:600; text-transform:none; color:var(--ink);">First row is a header row (not a banner) — use it as column labels only</span>
+      </label>
+    </div>
+
+    <div class="card" id="bgRemovalCard">
+      <h2>Background removal</h2>
+      <p class="hint">Applies to every image pulled in from your spreadsheet/Google Sheet for that field type — no need to set it per box.</p>
+
+      <div class="toggle-row" id="bgRemoveImageRow">
+        <div class="tr-text">
+          <span class="tr-label">Remove BG: Images</span>
+          <span class="tr-sub">Cuts out the subject in every Image-type field</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="bgRemoveImageToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row" id="bgRemoveLogoRow">
+        <div class="tr-text">
+          <span class="tr-label">Remove BG: Logos</span>
+          <span class="tr-sub">Cuts out the background in every Logo-type field</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="bgRemoveLogoToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="bgRemoveAdvanced" style="display:none;">
+        <div style="height:1px; background:var(--line); margin:14px 0;"></div>
+
+        <label class="field">
+          <span class="lbl">Edge quality</span>
+          <select id="bgRemoveQuality">
+            <option value="small">Fast (smaller model, good for flat backgrounds)</option>
+            <option value="medium" selected>High quality (better on hair/fine edges, a bit slower)</option>
+          </select>
+        </label>
+
+        <div class="toggle-row" id="bgRemoveTrimRow">
+          <div class="tr-text">
+            <span class="tr-label">Trim to subject</span>
+            <span class="tr-sub">Crop away the transparent padding after removal</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="bgRemoveTrimToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row" id="bgRemoveFillRow">
+          <div class="tr-text">
+            <span class="tr-label">Fill with solid color</span>
+            <span class="tr-sub">Instead of transparency, composite onto a flat color</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="bgRemoveFillToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <label class="field" id="bgRemoveFillColorField" style="display:none;">
+          <span class="lbl">Fill color</span>
+          <div class="color-field">
+            <input type="color" id="bgRemoveFillColorSwatch" value="#ffffff">
+            <input type="text" id="bgRemoveFillColor" value="#ffffff">
+          </div>
+        </label>
+      </div>
+
+      <div class="bg-removal-status" id="bgRemoveStatus"></div>
+    </div>
+
+    <div class="card" id="mappingCard" style="display:none;">
+      <h2>Map columns to layers</h2>
+      <p class="hint">Pick the column letter that holds each layer's content for every row. We show a preview of row 1's value next to each option to help you confirm.</p>
+      <table class="maptable">
+        <thead><tr><th>Layer</th><th>Spreadsheet column</th></tr></thead>
+        <tbody id="mapTableBody"></tbody>
+      </table>
+
+      <label class="field" style="margin-top:16px;">
+        <span class="lbl">Output filename column (optional)</span>
+        <select id="filenameColumn"><option value="">— use row number —</option></select>
+      </label>
+
+      <div class="preview-rows" id="dataPeekWrap" style="display:none;">
+        <table class="datapeek" id="dataPeekTable"></table>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="btn secondary" data-goto="2">← Back</button>
+      <button class="btn" id="toStep4" disabled>Continue to generate →</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-4">
+    <div class="card">
+      <div class="toolbar">
+        <div class="left">
+          <h2 style="margin:0;">3. Generate adaptations</h2>
+        </div>
+        <div class="left">
+          <select id="exportFormatSelect" style="width:auto;">
+            <option value="png">Export as PNG</option>
+            <option value="jpg">Export as JPG</option>
+          </select>
+          <button class="btn secondary" id="btnRegenerate">Generate / refresh all</button>
+          <button class="btn secondary" id="btnRenameAllToggle">✎ Rename all</button>
+          <button class="btn" id="btnDownloadZip" disabled>Download all (.zip)</button>
+        </div>
+      </div>
+      <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Click any export below to fix its text before downloading. Click a filename to rename it.</p>
+      <div class="rename-all-bar" id="renameAllBar" style="display:none;">
+        <span class="rl">Prefix</span>
+        <input type="text" id="renamePrefix" placeholder="e.g. banner">
+        <span class="rl">Start #</span>
+        <input type="number" id="renameStart" value="1" min="1" style="width:80px;">
+        <span class="rl">Suffix</span>
+        <input type="text" id="renameSuffix" placeholder="optional">
+        <button class="btn small" id="btnRenameApply">Apply to all</button>
+        <button class="btn secondary small" id="btnRenameReset">Reset to default names</button>
+      </div>
+      <div class="progress-wrap" id="progressWrap" style="display:none;">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText">0 / 0</div>
+      </div>
+      <div class="image-fail-banner" id="imageFailBanner" style="display:none;"></div>
+      <div class="output-grid" id="outputGrid"></div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="btn secondary" data-goto="3">← Back</button>
+      <span></span>
+    </div>
+  </section>
+
+  <div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="editModalTitle">Edit export</h2>
+        <button class="btn secondary small" id="btnCloseEditModal">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-preview">
+          <img id="editModalPreview" alt="Preview">
+        </div>
+        <div class="modal-fields" id="editModalFields"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn secondary" id="btnResetOverride">Reset to spreadsheet text</button>
+        <div style="flex:1;"></div>
+        <select id="editModalFormat" style="width:auto;">
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+        </select>
+        <button class="btn" id="btnApplyAndDownload">Apply & download</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<canvas id="renderCanvas" style="display:none;"></canvas>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== STATE ===================== */
+  const state = {
+    templateImg: null,          // HTMLImageElement
+    templateDataUrl: null,       // data: URL of the original template image (for saving/restoring)
+    templateName: "template",
+    naturalW: 0, naturalH: 0,
+    displayScale: 1,            // editor display px -> natural px factor (natural = display / scale)
+    layers: [],                 // {id,name,type,x,y,w,h, ...style}
+    selectedLayerId: null,
+    activeTab: 'text',          // which layer-type tab is showing in the sidebar
+    customFonts: [],            // {id, name, family, fileName}
+    sheetRows: [],              // array of objects keyed by header
+    sheetHeaders: [],           // legacy, unused now (kept for safety, see columnLabels)
+    columnCount: 0,
+    columnLabels: [],           // display label per column index ("A" or "A — Headline")
+    columnMap: {},              // layerId -> header name
+    filenameColumn: "",
+    generated: [],               // {id, name, url, blob, rowIndex, overrides}
+    exportFormat: 'png',         // 'png' | 'jpg' — applies to "download all"
+    jpgQuality: 0.92,
+    removeBackgroundByType: { image: false, logo: false }, // global switches, not per-layer
+    bgRemovalQuality: 'medium',   // 'small' (fast) | 'medium' (high quality edges)
+    bgRemovalTrim: true,          // crop to subject bounding box after removal
+    bgRemovalFill: false,         // composite onto a solid color instead of transparency
+    bgRemovalFillColor: '#ffffff'
+  };
+  let layerSeq = 1;
+  let fontSeq = 1;
+
+  /* ===================== UNDO / REDO (layout history) ===================== */
+  let history = [];
+  let historyIndex = -1;
+  let historySuppressed = false;
+  let historyDebounceTimer = null;
+
+  function snapshotLayers(){ return JSON.stringify(state.layers); }
+
+  function pushHistory(){
+    if(historySuppressed) return;
+    const snap = snapshotLayers();
+    if(history[historyIndex] === snap) return;
+    history = history.slice(0, historyIndex+1);
+    history.push(snap);
+    if(history.length > 100) history.shift();
+    historyIndex = history.length - 1;
+    updateUndoRedoButtons();
+  }
+
+  function scheduleHistoryPush(){
+    clearTimeout(historyDebounceTimer);
+    historyDebounceTimer = setTimeout(pushHistory, 400);
+  }
+
+  function applyHistorySnapshot(){
+    state.layers = JSON.parse(history[historyIndex]);
+    if(!state.layers.find(l=>l.id===state.selectedLayerId)) state.selectedLayerId = null;
+    historySuppressed = true;
+    renderEditor();
+    historySuppressed = false;
+    updateUndoRedoButtons();
+  }
+
+  function undo(){
+    clearTimeout(historyDebounceTimer);
+    if(historyIndex <= 0) return;
+    historyIndex--;
+    applyHistorySnapshot();
+  }
+
+  function redo(){
+    clearTimeout(historyDebounceTimer);
+    if(historyIndex >= history.length-1) return;
+    historyIndex++;
+    applyHistorySnapshot();
+  }
+
+  function updateUndoRedoButtons(){
+    const u = document.getElementById('btnUndo'), r = document.getElementById('btnRedo');
+    if(u) u.disabled = historyIndex <= 0;
+    if(r) r.disabled = historyIndex >= history.length - 1;
+  }
+
+  function resetHistory(){
+    history = [snapshotLayers()];
+    historyIndex = 0;
+    updateUndoRedoButtons();
+  }
+
+  document.getElementById('btnUndo').addEventListener('click', undo);
+  document.getElementById('btnRedo').addEventListener('click', redo);
+  document.addEventListener('keydown', e=>{
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    if(!(e.ctrlKey || e.metaKey)) return;
+    if(e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+    else if(e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z' && e.shiftKey)){ e.preventDefault(); redo(); }
+  });
+
+  /* ===================== BACKGROUND REMOVAL CACHE ===================== */
+  // Cache processed (background-removed) images by source URL so we never
+  // run the model twice on the same asset. Key: url -> Promise<HTMLImageElement|null>
+  const bgRemovedCache = new Map();
+  let bgRemovalLibReady = null; // Promise that resolves once the lib's first call has primed
+
+  function bgRemovalAvailable(){
+    return typeof window.imglyRemoveBackground === 'function' || (window.imgly && typeof window.imgly.removeBackground === 'function');
+  }
+
+  // Background removal is a global, per-type setting now (not per layer instance).
+  function isBgRemovalActiveForLayer(layer){
+    if(!layer || layer.type==='text') return false;
+    return !!state.removeBackgroundByType[layer.type];
+  }
+
+  function getRemoveBackgroundFn(){
+    if(typeof window.imglyRemoveBackground === 'function') return window.imglyRemoveBackground;
+    if(window.imgly && typeof window.imgly.removeBackground === 'function') return window.imgly.removeBackground;
+    return null;
+  }
+
+  // Crop a canvas/image down to the bounding box of its non-transparent pixels.
+  // Mirrors the trim_to_content() step in the rembg CLI script.
+  function trimToSubject(img){
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth || img.width;
+    c.height = img.naturalHeight || img.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    let data;
+    try{ data = ctx.getImageData(0, 0, c.width, c.height).data; }
+    catch(err){ return img; } // tainted canvas (CORS) — skip trim, return as-is
+
+    let minX=c.width, minY=c.height, maxX=-1, maxY=-1;
+    for(let y=0; y<c.height; y++){
+      for(let x=0; x<c.width; x++){
+        const a = data[(y*c.width + x)*4 + 3];
+        if(a > 0){
+          if(x<minX) minX=x; if(x>maxX) maxX=x;
+          if(y<minY) minY=y; if(y>maxY) maxY=y;
+        }
+      }
+    }
+    if(maxX < minX || maxY < minY) return img; // nothing detected, bail out safely
+
+    const w = maxX - minX + 1, h = maxY - minY + 1;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    out.getContext('2d').drawImage(c, minX, minY, w, h, 0, 0, w, h);
+    return out;
+  }
+
+  // Composite a transparent image onto a solid background color.
+  // Mirrors the --bg-color option in the rembg CLI script.
+  function fillWithColor(img, hexColor){
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = hexColor || '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    return c;
+  }
+
+  function canvasToImage(canvas){
+    return new Promise(resolve=>{
+      canvas.toBlob(blob=>{
+        const objUrl = URL.createObjectURL(blob);
+        const im = new Image();
+        im.onload = ()=>resolve(im);
+        im.onerror = ()=>resolve(canvas); // fall back to using the canvas directly
+        im.src = objUrl;
+      }, 'image/png');
+    });
+  }
+
+  // Runs background removal on an already-loaded <img> (or a URL) and returns
+  // a new HTMLImageElement with transparency (or a solid fill), or null on failure.
+  // `sourceImg`, when provided, is an <img> that has ALREADY been successfully
+  // loaded (e.g. via a working Drive/CORS-proxy candidate URL) — we hand that
+  // straight to the removal lib instead of making it re-fetch the raw `url`,
+  // which is very often a Google Drive share link or otherwise unfetchable
+  // directly and would just fail silently.
+  async function getBackgroundRemovedImage(url, sourceImg){
+    if(!url) return null;
+    // Cache key includes the settings that affect the output, so toggling
+    // quality/trim/fill doesn't serve a stale result from a previous run.
+    const cacheKey = [url, state.bgRemovalQuality, state.bgRemovalTrim, state.bgRemovalFill, state.bgRemovalFillColor].join('::');
+    if(bgRemovedCache.has(cacheKey)) return bgRemovedCache.get(cacheKey);
+
+    const promise = (async ()=>{
+      const fn = getRemoveBackgroundFn();
+      if(!fn){
+        console.warn('Background removal library not available.');
+        return null;
+      }
+      try{
+        // The @imgly/background-removal lib accepts a URL, Blob, or HTMLImageElement
+        // and returns a Blob (PNG with alpha) by default. Prefer the already-loaded
+        // image element so we reuse whichever candidate URL actually worked.
+        const source = sourceImg || url;
+        const config = {
+          model: state.bgRemovalQuality === 'small' ? 'small' : 'medium',
+          output: { format: 'image/png', quality: 1 }
+        };
+        const resultBlob = await fn(source, config);
+        const objUrl = URL.createObjectURL(resultBlob);
+        let img = await new Promise((resolve, reject)=>{
+          const im = new Image();
+          im.onload = ()=>resolve(im);
+          im.onerror = reject;
+          im.src = objUrl;
+        });
+
+        // Post-process to mirror the rembg CLI's --trim / --bg-color behavior.
+        let canvasResult = null;
+        if(state.bgRemovalTrim){
+          canvasResult = trimToSubject(img);
+        }
+        if(state.bgRemovalFill){
+          canvasResult = fillWithColor(canvasResult || img, state.bgRemovalFillColor);
+        }
+        if(canvasResult){
+          img = await canvasToImage(canvasResult);
+        }
+        return img;
+      }catch(err){
+        console.error('Background removal failed for', url, err);
+        return null;
+      }
+    })();
+
+    bgRemovedCache.set(cacheKey, promise);
+    return promise;
+  }
+
+  /* ===================== STEP NAV ===================== */
+  const panels = {1:document.getElementById('panel-1'),2:document.getElementById('panel-2'),3:document.getElementById('panel-3'),4:document.getElementById('panel-4')};
+  const pills = Array.from(document.querySelectorAll('.step-pill'));
+
+  function goToStep(n){
+    Object.keys(panels).forEach(k=>panels[k].classList.toggle('active', Number(k)===n));
+    pills.forEach(p=>{
+      const s = Number(p.dataset.step);
+      p.classList.toggle('active', s===n);
+    });
+    if(n===2) requestAnimationFrame(renderEditor);
+  }
+  function unlockStep(n){
+    const p = pills.find(p=>Number(p.dataset.step)===n);
+    if(p){ p.disabled=false; p.classList.add('done'); }
+  }
+  pills.forEach(p=>{
+    p.addEventListener('click', ()=>{ if(!p.disabled) goToStep(Number(p.dataset.step)); });
+  });
+  document.querySelectorAll('[data-goto]').forEach(b=>{
+    b.addEventListener('click', ()=> goToStep(Number(b.dataset.goto)) );
+  });
+
+  /* ===================== STEP 1: TEMPLATE UPLOAD ===================== */
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  dropzone.addEventListener('click', ()=>fileInput.click());
+  ;['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev, e=>{e.preventDefault(); dropzone.classList.add('drag');}));
+  ;['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev, e=>{e.preventDefault(); dropzone.classList.remove('drag');}));
+  dropzone.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) loadTemplateFile(e.dataTransfer.files[0]); });
+  fileInput.addEventListener('change', e=>{ if(e.target.files[0]) loadTemplateFile(e.target.files[0]); });
+
+  document.getElementById('btnNewTemplate').addEventListener('click', ()=>{ goToStep(1); });
+
+  function loadTemplateFile(file){
+    if(!file.type.match(/image\/(png|jpe?g)/)){ alert('Please upload a PNG or JPG file.'); return; }
+    state.templateName = file.name.replace(/\.[^.]+$/,'');
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        state.templateImg = img;
+        state.templateDataUrl = e.target.result;
+        state.naturalW = img.naturalWidth;
+        state.naturalH = img.naturalHeight;
+        unlockStep(2);
+        goToStep(2);
+        setupEditorCanvas();
+        resetHistory();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ===================== STEP 2: LAYOUT EDITOR ===================== */
+  const stage = document.getElementById('canvasStage');
+  const bgCanvas = document.getElementById('bgCanvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const editorWrap = document.querySelector('.editor-wrap');
+
+  function setupEditorCanvas(){
+    const maxW = Math.min(900, editorWrap.clientWidth - 32);
+    const scale = Math.min(1, maxW / state.naturalW);
+    state.displayScale = scale;
+    bgCanvas.width = state.naturalW * scale;
+    bgCanvas.height = state.naturalH * scale;
+    bgCanvas.style.width = bgCanvas.width+'px';
+    bgCanvas.style.height = bgCanvas.height+'px';
+    stage.style.width = bgCanvas.width+'px';
+    stage.style.height = bgCanvas.height+'px';
+    bgCtx.drawImage(state.templateImg, 0,0, bgCanvas.width, bgCanvas.height);
+    renderEditor();
+    bindStageInteractions();
+  }
+
+  const LOREM = "Lorem ipsum dolor sit amet";
+
+  function drawLoremPreviewForLayer(ctx, layer, scale){
+    const x = layer.x*scale, y = layer.y*scale, w = layer.w*scale, h = layer.h*scale;
+    if(layer.type==='text'){
+      const pad = 4*scale;
+      const {fontSize, lines, lineHeight} = wrapAndFitText(
+        ctx, LOREM, w-pad*2, h-pad*2,
+        layer.fontSize*scale, layer.fontWeight, layer.fontFamily
+      );
+      ctx.font = `${layer.fontWeight} ${fontSize}px ${layer.fontFamily}`;
+      ctx.fillStyle = layer.fontColor;
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = layer.textAlign;
+      const totalTextHeight = lines.length*lineHeight;
+      let startY;
+      if(layer.vAlign==='top') startY = y + fontSize;
+      else if(layer.vAlign==='bottom') startY = y + h - totalTextHeight + fontSize;
+      else startY = y + (h-totalTextHeight)/2 + fontSize;
+      let tx = x;
+      if(layer.textAlign==='center') tx = x + w/2;
+      else if(layer.textAlign==='right') tx = x + w;
+      lines.forEach((line,i)=>{
+        ctx.fillText(line, tx, startY + i*lineHeight);
+      });
+    } else {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x,y,w,h);
+      ctx.clip();
+      ctx.fillStyle = layer.type==='logo' ? 'rgba(154,123,63,0.18)' : 'rgba(74,111,165,0.18)';
+      ctx.fillRect(x,y,w,h);
+      ctx.strokeStyle = layer.type==='logo' ? 'rgba(154,123,63,0.5)' : 'rgba(74,111,165,0.5)';
+      ctx.lineWidth = 1;
+      const step = Math.max(10, Math.min(w,h)/6);
+      for(let off=-h; off<w; off+=step){
+        ctx.beginPath();
+        ctx.moveTo(x+off, y+h);
+        ctx.lineTo(x+off+h, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+      ctx.fillStyle = layer.type==='logo' ? '#c9a45c' : '#7ea2d4';
+      ctx.font = `600 ${11*scale}px -apple-system, sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(layer.type==='logo'?'LOGO':'IMAGE', x+w/2, y+h/2);
+    }
+  }
+
+  function renderEditor(){
+    if(!state.templateImg) return;
+    bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+    bgCtx.drawImage(state.templateImg,0,0,bgCanvas.width,bgCanvas.height);
+    state.layers.forEach(layer=>{
+      drawLoremPreviewForLayer(bgCtx, layer, state.displayScale);
+    });
+    stage.querySelectorAll('.box').forEach(el=>el.remove());
+    state.layers.forEach(layer=>{
+      const el = document.createElement('div');
+      el.className = 'box '+(layer.type==='image'?'image-type':layer.type==='logo'?'logo-type':'')+(layer.id===state.selectedLayerId?' selected':'');
+      el.style.left = (layer.x*state.displayScale)+'px';
+      el.style.top = (layer.y*state.displayScale)+'px';
+      el.style.width = (layer.w*state.displayScale)+'px';
+      el.style.height = (layer.h*state.displayScale)+'px';
+      el.dataset.id = layer.id;
+      const tag = document.createElement('div');
+      tag.className='box-label';
+      tag.textContent = (layer.name||'untitled') + ' · ' + layer.type;
+      el.appendChild(tag);
+      const handle = document.createElement('div');
+      handle.className='handle';
+      handle.dataset.role='resize';
+      el.appendChild(handle);
+      stage.appendChild(el);
+    });
+    renderLayerList();
+    renderLayerDetail();
+  }
+
+  let dragMode = null; 
+  let dragLayer = null;
+  let dragStart = {x:0,y:0};
+  let dragOrigBox = null;
+  let newBoxEl = null;
+
+  function bindStageInteractions(){
+    stage.onmousedown = e=>{
+      const boxEl = e.target.closest('.box');
+      if(boxEl && e.target.dataset.role==='resize'){
+        dragMode='resize';
+        dragLayer = state.layers.find(l=>l.id===boxEl.dataset.id);
+        dragOrigBox = {...dragLayer};
+        dragStart = {x:e.clientX, y:e.clientY};
+        selectLayer(dragLayer.id);
+        e.stopPropagation();
+        return;
+      }
+      if(boxEl){
+        dragMode='move';
+        dragLayer = state.layers.find(l=>l.id===boxEl.dataset.id);
+        dragOrigBox = {...dragLayer};
+        dragStart = {x:e.clientX, y:e.clientY};
+        selectLayer(dragLayer.id);
+        e.stopPropagation();
+        return;
+      }
+      const rect = stage.getBoundingClientRect();
+      const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+      dragMode='create';
+      dragStart = {x:sx, y:sy};
+      newBoxEl = document.createElement('div');
+      newBoxEl.className='box selected';
+      newBoxEl.style.left=sx+'px'; newBoxEl.style.top=sy+'px';
+      newBoxEl.style.width='0px'; newBoxEl.style.height='0px';
+      stage.appendChild(newBoxEl);
+    };
+
+    document.onmousemove = e=>{
+      if(!dragMode) return;
+      const rect = stage.getBoundingClientRect();
+      if(dragMode==='create'){
+        const cx = Math.max(0, Math.min(e.clientX-rect.left, rect.width));
+        const cy = Math.max(0, Math.min(e.clientY-rect.top, rect.height));
+        const x = Math.min(dragStart.x, cx), y = Math.min(dragStart.y, cy);
+        const w = Math.abs(cx-dragStart.x), h = Math.abs(cy-dragStart.y);
+        newBoxEl.style.left=x+'px'; newBoxEl.style.top=y+'px';
+        newBoxEl.style.width=w+'px'; newBoxEl.style.height=h+'px';
+      } else if(dragMode==='move'){
+        const dx = (e.clientX-dragStart.x)/state.displayScale;
+        const dy = (e.clientY-dragStart.y)/state.displayScale;
+        dragLayer.x = clamp(dragOrigBox.x+dx, 0, state.naturalW-dragLayer.w);
+        dragLayer.y = clamp(dragOrigBox.y+dy, 0, state.naturalH-dragLayer.h);
+        renderEditor();
+      } else if(dragMode==='resize'){
+        const dx = (e.clientX-dragStart.x)/state.displayScale;
+        const dy = (e.clientY-dragStart.y)/state.displayScale;
+        dragLayer.w = Math.max(10, dragOrigBox.w+dx);
+        dragLayer.h = Math.max(10, dragOrigBox.h+dy);
+        renderEditor();
+      }
+    };
+
+    document.onmouseup = e=>{
+      if(dragMode==='create'){
+        const rect = stage.getBoundingClientRect();
+        const cx = Math.max(0, Math.min(e.clientX-rect.left, rect.width));
+        const cy = Math.max(0, Math.min(e.clientY-rect.top, rect.height));
+        const x = Math.min(dragStart.x, cx), y = Math.min(dragStart.y, cy);
+        const w = Math.abs(cx-dragStart.x), h = Math.abs(cy-dragStart.y);
+        if(newBoxEl) newBoxEl.remove();
+        newBoxEl = null;
+        if(w>8 && h>8){
+          addLayer({
+            x: x/state.displayScale, y: y/state.displayScale,
+            w: w/state.displayScale, h: h/state.displayScale
+          });
+        }
+      } else if(dragMode==='move' || dragMode==='resize'){
+        pushHistory();
+      }
+      dragMode=null; dragLayer=null; dragOrigBox=null;
+    };
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  const typeDefaultNamePrefix = {text:'copy', image:'image', logo:'logo'};
+
+  function countOfType(type){ return state.layers.filter(l=>l.type===type).length; }
+
+  function addLayer(box){
+    const id = 'L'+(layerSeq++);
+    const type = state.activeTab;
+    const prefix = typeDefaultNamePrefix[type] || 'field';
+    const layer = {
+      id, name: prefix+'_'+(countOfType(type)+1), type,
+      x: box.x, y: box.y, w: box.w, h: box.h,
+      fontSize:32, fontWeight:'700', fontColor:'#1a1a18', textAlign:'center',
+      fontFamily:"-apple-system, Helvetica, Arial, sans-serif", vAlign:'middle',
+      imageFit:'cover'
+    };
+    state.layers.push(layer);
+    selectLayer(id);
+    document.getElementById('toStep3').disabled = false;
+    unlockStep(3);
+    renderEditor();
+    pushHistory();
+  }
+
+  function selectLayer(id){
+    state.selectedLayerId = id;
+    const layer = state.layers.find(l=>l.id===id);
+    if(layer && layer.type !== state.activeTab){
+      state.activeTab = layer.type;
+    }
+    renderEditor();
+  }
+
+  function setActiveTab(tab){
+    state.activeTab = tab;
+    renderLayerList();
+    renderEditor();
+  }
+
+  document.querySelectorAll('.layer-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=> setActiveTab(btn.dataset.tab) );
+  });
+
+  function renderLayerList(){
+    const list = document.getElementById('layerList');
+    const emptyNote = document.getElementById('layerEmptyNote');
+    document.getElementById('layerCount').textContent = state.layers.length;
+    document.getElementById('countText').textContent = countOfType('text');
+    document.getElementById('countImage').textContent = countOfType('image');
+    document.getElementById('countLogo').textContent = countOfType('logo');
+    document.querySelectorAll('.layer-tab').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
+    });
+    list.innerHTML='';
+    const visible = state.layers.filter(l=>l.type===state.activeTab);
+    emptyNote.style.display = visible.length? 'none':'block';
+    emptyNote.textContent = state.activeTab==='text'
+      ? 'Draw a box on the template to add a text/copy field.'
+      : state.activeTab==='image'
+      ? 'Draw a box on the template to add an image field.'
+      : 'Draw a box on the template to add a logo field.';
+    visible.forEach(layer=>{
+      const item = document.createElement('div');
+      item.className = 'layer-item'+(layer.id===state.selectedLayerId?' selected':'');
+      item.innerHTML = `<span class="swatch ${layer.type}"></span><span class="lname">${escapeHtml(layer.name||'untitled')}</span><button class="ldel" title="Delete">×</button>`;
+      item.addEventListener('click', e=>{
+        if(e.target.classList.contains('ldel')){
+          state.layers = state.layers.filter(l=>l.id!==layer.id);
+          if(state.selectedLayerId===layer.id) state.selectedLayerId=null;
+          if(!state.layers.length){
+            document.getElementById('toStep3').disabled = true;
+          }
+          renderEditor();
+          pushHistory();
+          return;
+        }
+        selectLayer(layer.id);
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  const layerDetailCard = document.getElementById('layerDetailCard');
+  const elName = document.getElementById('layerName');
+  const elType = document.getElementById('layerType');
+  const elFontSize = document.getElementById('fontSize');
+  const elFontWeight = document.getElementById('fontWeight');
+  const elFontColor = document.getElementById('fontColor');
+  const elFontColorSwatch = document.getElementById('fontColorSwatch');
+  const elTextAlign = document.getElementById('textAlign');
+  const elFontFamily = document.getElementById('fontFamily');
+  const elVAlign = document.getElementById('vAlign');
+  const elImageFit = document.getElementById('imageFit');
+  const elBoxX = document.getElementById('boxX');
+  const elBoxY = document.getElementById('boxY');
+  const elBoxW = document.getElementById('boxW');
+  const elBoxH = document.getElementById('boxH');
+  const elBgRemoveImageToggle = document.getElementById('bgRemoveImageToggle');
+  const elBgRemoveLogoToggle = document.getElementById('bgRemoveLogoToggle');
+  const elBgRemoveStatus = document.getElementById('bgRemoveStatus');
+  const elBgRemoveAdvanced = document.getElementById('bgRemoveAdvanced');
+  const elBgRemoveQuality = document.getElementById('bgRemoveQuality');
+  const elBgRemoveTrimToggle = document.getElementById('bgRemoveTrimToggle');
+  const elBgRemoveFillToggle = document.getElementById('bgRemoveFillToggle');
+  const elBgRemoveFillColorField = document.getElementById('bgRemoveFillColorField');
+  const elBgRemoveFillColor = document.getElementById('bgRemoveFillColor');
+  const elBgRemoveFillColorSwatch = document.getElementById('bgRemoveFillColorSwatch');
+
+  function renderLayerDetail(){
+    const layer = state.layers.find(l=>l.id===state.selectedLayerId);
+    if(!layer){ layerDetailCard.style.display='none'; return; }
+    layerDetailCard.style.display='block';
+    elName.value = layer.name;
+    elType.value = layer.type;
+    elFontSize.value = layer.fontSize;
+    elFontWeight.value = layer.fontWeight;
+    elFontColor.value = layer.fontColor;
+    elFontColorSwatch.value = /^#[0-9a-fA-F]{6}$/.test(layer.fontColor) ? layer.fontColor : '#000000';
+    elTextAlign.value = layer.textAlign;
+    setSegmentedActive('textAlignSeg', layer.textAlign);
+    elFontFamily.value = layer.fontFamily;
+    elVAlign.value = layer.vAlign;
+    setSegmentedActive('vAlignSeg', layer.vAlign);
+    elImageFit.value = layer.imageFit;
+    elBoxX.value = Math.round(layer.x);
+    elBoxY.value = Math.round(layer.y);
+    elBoxW.value = Math.round(layer.w);
+    elBoxH.value = Math.round(layer.h);
+    document.getElementById('textOptions').style.display = layer.type==='text' ? 'block':'none';
+    document.getElementById('imageOptions').style.display = layer.type!=='text' ? 'block':'none';
+  }
+
+  function updateSelectedLayer(field, value){
+    const layer = state.layers.find(l=>l.id===state.selectedLayerId);
+    if(!layer) return;
+    layer[field] = value;
+    renderEditor();
+    scheduleHistoryPush();
+  }
+
+  function setSegmentedActive(groupId, value){
+    document.querySelectorAll(`#${groupId} button`).forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.value === value);
+    });
+  }
+  function wireSegmented(groupId, hiddenInputId, layerField){
+    const group = document.getElementById(groupId);
+    const hidden = document.getElementById(hiddenInputId);
+    group.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const value = btn.dataset.value;
+        hidden.value = value;
+        setSegmentedActive(groupId, value);
+        updateSelectedLayer(layerField, value);
+      });
+    });
+  }
+  wireSegmented('textAlignSeg', 'textAlign', 'textAlign');
+  wireSegmented('vAlignSeg', 'vAlign', 'vAlign');
+
+  elName.addEventListener('input', e=>updateSelectedLayer('name', e.target.value));
+  elType.addEventListener('change', e=>{
+    updateSelectedLayer('type', e.target.value);
+    state.activeTab = e.target.value;
+    renderLayerList();
+  });
+  elFontSize.addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    if(e.target.value==='' || isNaN(v) || v<=0) return;
+    updateSelectedLayer('fontSize', v);
+  });
+  elFontWeight.addEventListener('change', e=>updateSelectedLayer('fontWeight', e.target.value));
+  elFontColor.addEventListener('input', e=>{
+    updateSelectedLayer('fontColor', e.target.value);
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) elFontColorSwatch.value = e.target.value;
+  });
+  elFontColorSwatch.addEventListener('input', e=>{
+    elFontColor.value = e.target.value;
+    updateSelectedLayer('fontColor', e.target.value);
+  });
+  elFontFamily.addEventListener('change', e=>updateSelectedLayer('fontFamily', e.target.value));
+  elImageFit.addEventListener('change', e=>updateSelectedLayer('imageFit', e.target.value));
+
+  function updateBgRemovalStatusText(){
+    const onImage = state.removeBackgroundByType.image;
+    const onLogo = state.removeBackgroundByType.logo;
+    elBgRemoveAdvanced.style.display = (onImage || onLogo) ? 'block' : 'none';
+    if(!onImage && !onLogo){
+      elBgRemoveStatus.textContent = '';
+      elBgRemoveStatus.classList.remove('err');
+      return;
+    }
+    const parts = [];
+    if(onImage) parts.push('Images');
+    if(onLogo) parts.push('Logos');
+    const extras = [];
+    if(state.bgRemovalTrim) extras.push('trimmed to the subject');
+    if(state.bgRemovalFill) extras.push(`filled with ${state.bgRemovalFillColor}`);
+    const extraText = extras.length ? ` Results will be ${extras.join(' and ')}.` : '';
+    const lib = bgRemovalAvailable();
+    elBgRemoveStatus.textContent = lib
+      ? `Background will be removed for every ${parts.join(' and ')} field when generating. First-time processing of each image can take a few seconds.${extraText}`
+      : `Background removal is queued for ${parts.join(' and ')} — the model is still loading, but it'll be ready by the time you generate.${extraText}`;
+    elBgRemoveStatus.classList.remove('err');
+  }
+
+  elBgRemoveImageToggle.addEventListener('change', e=>{
+    state.removeBackgroundByType.image = e.target.checked;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveLogoToggle.addEventListener('change', e=>{
+    state.removeBackgroundByType.logo = e.target.checked;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveQuality.addEventListener('change', e=>{
+    state.bgRemovalQuality = e.target.value;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveTrimToggle.addEventListener('change', e=>{
+    state.bgRemovalTrim = e.target.checked;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveFillToggle.addEventListener('change', e=>{
+    state.bgRemovalFill = e.target.checked;
+    elBgRemoveFillColorField.style.display = e.target.checked ? 'block' : 'none';
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveFillColor.addEventListener('input', e=>{
+    state.bgRemovalFillColor = e.target.value;
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) elBgRemoveFillColorSwatch.value = e.target.value;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+  elBgRemoveFillColorSwatch.addEventListener('input', e=>{
+    elBgRemoveFillColor.value = e.target.value;
+    state.bgRemovalFillColor = e.target.value;
+    updateBgRemovalStatusText();
+    renderEditor();
+  });
+
+  elBoxX.addEventListener('input', e=>updateSelectedLayer('x', Number(e.target.value)));
+  elBoxY.addEventListener('input', e=>updateSelectedLayer('y', Number(e.target.value)));
+  elBoxW.addEventListener('input', e=>updateSelectedLayer('w', Number(e.target.value)));
+  elBoxH.addEventListener('input', e=>updateSelectedLayer('h', Number(e.target.value)));
+
+  document.getElementById('btnDeleteLayer').addEventListener('click', ()=>{
+    state.layers = state.layers.filter(l=>l.id!==state.selectedLayerId);
+    state.selectedLayerId=null;
+    if(!state.layers.length) document.getElementById('toStep3').disabled = true;
+    renderEditor();
+    pushHistory();
+  });
+
+  const fontFileInput = document.getElementById('fontFileInput');
+  const fontFriendlyName = document.getElementById('fontFriendlyName');
+  const fontStatus = document.getElementById('fontStatus');
+
+  document.getElementById('btnUploadFont').addEventListener('click', ()=>{
+    if(!fontFriendlyName.value.trim()){
+      fontStatus.textContent = 'Give the font a name first.';
+      fontStatus.classList.add('err');
+      fontFriendlyName.focus();
+      return;
+    }
+    fontFileInput.click();
+  });
+
+  fontFileInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const friendlyName = fontFriendlyName.value.trim();
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      try{
+        const familySafe = 'tpl-font-'+(fontSeq++)+'-'+friendlyName.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+        const fontFace = new FontFace(familySafe, ev.target.result);
+        await fontFace.load();
+        document.fonts.add(fontFace);
+        const dataB64 = arrayBufferToBase64(ev.target.result);
+        state.customFonts.push({ id: familySafe, name: friendlyName, family: familySafe, fileName: file.name, data: dataB64 });
+        fontStatus.textContent = `"${friendlyName}" loaded and ready to use.`;
+        fontStatus.classList.remove('err');
+        fontFriendlyName.value = '';
+        renderFontList();
+        rebuildFontFamilyOptions();
+      }catch(err){
+        console.error(err);
+        fontStatus.textContent = 'Could not load that font file. Use .ttf, .otf, .woff, or .woff2.';
+        fontStatus.classList.add('err');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    fontFileInput.value = '';
+  });
+
+  function renderFontList(){
+    const list = document.getElementById('fontList');
+    list.innerHTML = '';
+    if(!state.customFonts.length){
+      list.innerHTML = '<div class="empty-note">No template fonts uploaded yet — text layers will use system fonts.</div>';
+      return;
+    }
+    state.customFonts.forEach(f=>{
+      const item = document.createElement('div');
+      item.className = 'font-item';
+      item.style.fontFamily = `"${f.family}"`;
+      item.innerHTML = `<span class="fi-name">${escapeHtml(f.name)}</span><span class="fi-file">${escapeHtml(f.fileName)}</span><button class="fdel" title="Remove">×</button>`;
+      item.querySelector('.fdel').addEventListener('click', ()=>{
+        state.customFonts = state.customFonts.filter(x=>x.id!==f.id);
+        state.layers.forEach(l=>{
+          if(l.fontFamily===`"${f.family}"`) l.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
+        });
+        renderFontList();
+        rebuildFontFamilyOptions();
+        renderEditor();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function rebuildFontFamilyOptions(){
+    const current = elFontFamily.value;
+    const defaults = [
+      ['-apple-system, Helvetica, Arial, sans-serif','System sans (default)'],
+      ["Georgia, 'Times New Roman', serif",'Serif (default)'],
+      ["'Courier New', monospace",'Monospace (default)']
+    ];
+    let html = defaults.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    if(state.customFonts.length){
+      html += `<optgroup label="Template fonts">` +
+        state.customFonts.map(f=>`<option value='"${f.family}"'>${escapeHtml(f.name)}</option>`).join('') +
+        `</optgroup>`;
+    }
+    elFontFamily.innerHTML = html;
+    if([...elFontFamily.options].some(o=>o.value===current)) elFontFamily.value = current;
+  }
+
+  renderFontList();
+  elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
+  elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
+  elBgRemoveQuality.value = state.bgRemovalQuality;
+  elBgRemoveTrimToggle.checked = state.bgRemovalTrim;
+  elBgRemoveFillToggle.checked = state.bgRemovalFill;
+  elBgRemoveFillColorField.style.display = state.bgRemovalFill ? 'block' : 'none';
+  elBgRemoveFillColor.value = state.bgRemovalFillColor;
+  elBgRemoveFillColorSwatch.value = state.bgRemovalFillColor;
+  updateBgRemovalStatusText();
+
+  document.getElementById('toStep3').addEventListener('click', ()=>{
+    buildColumnMapUI();
+    goToStep(3);
+  });
+
+  window.addEventListener('resize', ()=>{ if(state.templateImg) setupEditorCanvas(); });
+
+  /* ===================== STEP 3: SHEET UPLOAD + MAPPING ===================== */
+  const dropzoneSheet = document.getElementById('dropzoneSheet');
+  const sheetInput = document.getElementById('sheetInput');
+  dropzoneSheet.addEventListener('click', ()=>sheetInput.click());
+  ;['dragover','dragenter'].forEach(ev=>dropzoneSheet.addEventListener(ev, e=>{e.preventDefault(); dropzoneSheet.classList.add('drag');}));
+  ;['dragleave','drop'].forEach(ev=>dropzoneSheet.addEventListener(ev, e=>{e.preventDefault(); dropzoneSheet.classList.remove('drag');}));
+  dropzoneSheet.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) loadSheetFile(e.dataTransfer.files[0]); });
+  sheetInput.addEventListener('change', e=>{ if(e.target.files[0]) loadSheetFile(e.target.files[0]); });
+
+  function colLetter(i){
+    let s = '';
+    i = i+1;
+    while(i>0){
+      const rem = (i-1)%26;
+      s = String.fromCharCode(65+rem) + s;
+      i = Math.floor((i-1)/26);
+    }
+    return s;
+  }
+
+  let rawSheetFile = null; 
+
+  function loadSheetFile(file){
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:'', blankrows:false});
+        if(!rows.length){ alert('No rows found in that spreadsheet.'); return; }
+        finishSheetLoad(rows);
+        showSheetSourceBadge('file', file.name);
+      }catch(err){
+        alert('Could not read that file. Please upload a valid .xlsx, .xls, or .csv file.');
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function finishSheetLoad(rows){
+    rawSheetFile = rows;
+    applyHeaderToggle();
+    document.getElementById('mappingCard').style.display='block';
+    document.getElementById('toStep4').disabled = false;
+    unlockStep(4);
+  }
+
+  const sourceBadge = document.getElementById('sourceBadge');
+  const sourcePickers = document.getElementById('sourcePickers');
+
+  function showSheetSourceBadge(kind, name){
+    document.getElementById('sourceBadgeIcon').textContent = kind==='url' ? '🔗' : '📄';
+    document.getElementById('sourceBadgeName').textContent = name;
+    sourceBadge.style.display = 'flex';
+    sourcePickers.style.display = 'none';
+  }
+
+  function clearLoadedSheet(){
+    rawSheetFile = null;
+    state.sheetRows = [];
+    state.columnCount = 0;
+    state.columnLabels = [];
+    state.columnMap = {};
+    state.filenameColumn = '';
+    state.generated = [];
+    document.getElementById('mappingCard').style.display = 'none';
+    document.getElementById('toStep4').disabled = true;
+    document.getElementById('sheetInput').value = '';
+    document.getElementById('sheetUrlInput').value = '';
+    sheetUrlStatus.textContent = '';
+    sheetUrlStatus.classList.remove('err');
+    sourceBadge.style.display = 'none';
+    sourcePickers.style.display = 'block';
+    const grid = document.getElementById('outputGrid');
+    if(grid) grid.innerHTML = '';
+    const progressWrap = document.getElementById('progressWrap');
+    if(progressWrap) progressWrap.style.display = 'none';
+    document.getElementById('btnDownloadZip').disabled = true;
+    imageLoadFailures = [];
+    const failBanner = document.getElementById('imageFailBanner');
+    if(failBanner) failBanner.style.display = 'none';
+  }
+
+  document.getElementById('btnReplaceSource').addEventListener('click', clearLoadedSheet);
+  document.getElementById('btnCancelSource').addEventListener('click', ()=>{
+    clearLoadedSheet();
+  });
+
+  function googleSheetInfo(rawUrl){
+    const m = rawUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if(!m) return null;
+    const id = m[1];
+    const gidMatch = rawUrl.match(/[#&]gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+    return {id, gid};
+  }
+
+  let jsonpSeq = 0;
+  function loadSheetViaJsonp(id, gid){
+    return new Promise((resolve, reject)=>{
+      const callbackName = 'gsheetCb'+(jsonpSeq++);
+      const script = document.createElement('script');
+      let settled = false;
+
+      const timeout = setTimeout(()=>{
+        if(settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('timeout'));
+      }, 12000);
+
+      function cleanup(){
+        clearTimeout(timeout);
+        delete window[callbackName];
+        script.remove();
+      }
+
+      window[callbackName] = (data)=>{
+        if(settled) return;
+        settled = true;
+        cleanup();
+        resolve(data);
+      };
+
+      script.onerror = ()=>{
+        if(settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('network'));
+      };
+
+      const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${callbackName}`;
+      script.src = url;
+      document.head.appendChild(script);
+    });
+  }
+
+  function gvizDataTableToRows(data){
+    if(!data || !data.table || !Array.isArray(data.table.rows)) return [];
+    return data.table.rows.map(r=>
+      (r.c||[]).map(cell=>{
+        if(!cell) return '';
+        if(cell.f!==undefined && cell.f!==null) return cell.f;
+        if(cell.v===undefined || cell.v===null) return '';
+        return cell.v;
+      })
+    );
+  }
+
+  const sheetUrlStatus = document.getElementById('sheetUrlStatus');
+  const btnLoadSheetUrl = document.getElementById('btnLoadSheetUrl');
+
+  btnLoadSheetUrl.addEventListener('click', async ()=>{
+    const rawUrl = document.getElementById('sheetUrlInput').value.trim();
+    if(!rawUrl){ return; }
+    const info = googleSheetInfo(rawUrl);
+    if(!info){
+      sheetUrlStatus.textContent = "That doesn't look like a Google Sheets link. Paste the URL from your browser's address bar.";
+      sheetUrlStatus.classList.add('err');
+      return;
+    }
+    sheetUrlStatus.textContent = 'Loading…';
+    sheetUrlStatus.classList.remove('err');
+    btnLoadSheetUrl.disabled = true;
+    try{
+      const data = await loadSheetViaJsonp(info.id, info.gid);
+      const rows = gvizDataTableToRows(data);
+      if(!rows.length){ throw new Error('empty'); }
+      finishSheetLoad(rows);
+      sheetUrlStatus.textContent = `Loaded ${rows.length} row${rows.length===1?'':'s'} from the sheet.`;
+      sheetUrlStatus.classList.remove('err');
+      showSheetSourceBadge('url', `Google Sheet — …${info.id.slice(-8)}`);
+    }catch(err){
+      console.error(err);
+      sheetUrlStatus.textContent = (err.message==='timeout' || err.message==='network')
+        ? 'This sheet isn\'t publicly viewable, or the link is wrong. In Google Sheets, click Share → General access → "Anyone with the link," then try again.'
+        : "Couldn't read any rows from that sheet. Make sure it has data and try again.";
+      sheetUrlStatus.classList.add('err');
+    }finally{
+      btnLoadSheetUrl.disabled = false;
+    }
+  });
+
+  function applyHeaderToggle(){
+    if(!rawSheetFile) return;
+    const hasHeaderRow = document.getElementById('hasHeaderRow').checked;
+    const maxCols = rawSheetFile.reduce((m,r)=>Math.max(m,r.length),0);
+    state.columnCount = maxCols;
+    state.columnLabels = []; 
+    if(hasHeaderRow){
+      const headerRow = rawSheetFile[0] || [];
+      for(let i=0;i<maxCols;i++){
+        const h = (headerRow[i]!==undefined && headerRow[i]!=='') ? String(headerRow[i]) : '';
+        state.columnLabels.push(h ? `${colLetter(i)} — ${h}` : colLetter(i));
+      }
+      state.sheetRows = rawSheetFile.slice(1);
+    } else {
+      for(let i=0;i<maxCols;i++) state.columnLabels.push(colLetter(i));
+      state.sheetRows = rawSheetFile.slice(0);
+    }
+    buildColumnMapUI();
+    renderDataPeek();
+  }
+
+  document.getElementById('hasHeaderRow').addEventListener('change', applyHeaderToggle);
+
+  function previewValueForColumn(idx){
+    if(!state.sheetRows.length) return '';
+    const v = state.sheetRows[0][idx];
+    return (v===undefined || v==='') ? '' : String(v);
+  }
+
+  function guessColumnFor(layerName){
+    if(!document.getElementById('hasHeaderRow').checked || !rawSheetFile) return '';
+    const headerRow = rawSheetFile[0] || [];
+    const lname = layerName.toLowerCase();
+    let best = -1, bestScore = 0;
+    headerRow.forEach((h,i)=>{
+      const hl = String(h).toLowerCase();
+      let score = 0;
+      if(hl===lname) score = 100;
+      else if(hl && (hl.includes(lname) || lname.includes(hl))) score = 50;
+      if(score>bestScore){ bestScore=score; best=i; }
+    });
+    return best>=0 ? best : '';
+  }
+
+  function buildColumnMapUI(){
+    const tbody = document.getElementById('mapTableBody');
+    tbody.innerHTML='';
+    const colCount = state.columnCount || 0;
+    state.layers.forEach(layer=>{
+      if(state.columnMap[layer.id]===undefined && colCount){
+        const guess = guessColumnFor(layer.name);
+        state.columnMap[layer.id] = guess;
+      }
+      const tr = document.createElement('tr');
+      const tdLabel = document.createElement('td');
+      tdLabel.innerHTML = `<span class="col-tag"><span class="swatch ${layer.type==='text'?'text':layer.type==='image'?'image':'logo'}" style="background:${layer.type==='text'?'var(--accent)':layer.type==='image'?'#4a6fa5':'#9a7b3f'}"></span>${escapeHtml(layer.name)} <span style="color:var(--muted); font-weight:400;">(${layer.type})</span></span>`;
+      const tdSelect = document.createElement('td');
+      const sel = document.createElement('select');
+      let optsHtml = '<option value="">— not mapped —</option>';
+      for(let i=0;i<colCount;i++){
+        const preview = previewValueForColumn(i);
+        const labelText = state.columnLabels[i] + (preview ? `  (e.g. "${preview.slice(0,28)}")` : '');
+        const selected = String(state.columnMap[layer.id])===String(i) ? 'selected' : '';
+        optsHtml += `<option value="${i}" ${selected}>${escapeHtml(labelText)}</option>`;
+      }
+      sel.innerHTML = optsHtml;
+      sel.addEventListener('change', ()=>{ state.columnMap[layer.id] = sel.value===''? '': Number(sel.value); });
+      tdSelect.appendChild(sel);
+      tr.appendChild(tdLabel); tr.appendChild(tdSelect);
+      tbody.appendChild(tr);
+    });
+    const fnSel = document.getElementById('filenameColumn');
+    let fnHtml = '<option value="">— use row number —</option>';
+    for(let i=0;i<colCount;i++){
+      fnHtml += `<option value="${i}">${escapeHtml(state.columnLabels[i])}</option>`;
+    }
+    fnSel.innerHTML = fnHtml;
+    fnSel.onchange = ()=>{ state.filenameColumn = fnSel.value===''? '': Number(fnSel.value); };
+  }
+
+  function renderDataPeek(){
+    const wrap = document.getElementById('dataPeekWrap');
+    const table = document.getElementById('dataPeekTable');
+    if(!state.sheetRows.length){ wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    const colCount = state.columnCount || 0;
+    let html = '<thead><tr>'+Array.from({length:colCount},(_,i)=>`<th>${escapeHtml(state.columnLabels[i])}</th>`).join('')+'</tr></thead><tbody>';
+    state.sheetRows.slice(0,8).forEach(row=>{
+      html += '<tr>'+Array.from({length:colCount},(_,i)=>`<td title="${escapeHtml(String(row[i]??''))}">${escapeHtml(String(row[i]??''))}</td>`).join('')+'</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  document.getElementById('toStep4').addEventListener('click', ()=>{
+    goToStep(4);
+  });
+
+  /* ===================== STEP 4: GENERATE ===================== */
+  const renderCanvas = document.getElementById('renderCanvas');
+  const renderCtx = renderCanvas.getContext('2d');
+
+  function extractDriveFileId(url){
+    let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if(m) return m[1];
+    m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if(m) return m[1];
+    m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if(m) return m[1];
+    return null;
+  }
+
+  function driveCandidateUrls(rawUrl){
+    // If it's not a Google Drive link, pass it through directly, but also provide a proxied fallback
+    // just in case the external site blocks canvas drawing (CORS).
+    if(!/drive\.google\.com|drive\.usercontent\.google\.com|googleusercontent\.com|docs\.google\.com/.test(rawUrl)) {
+      return [
+        rawUrl,
+        `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`
+      ];
+    }
+    
+    const id = extractDriveFileId(rawUrl);
+    if(!id) return [rawUrl];
+
+    // Construct the direct download link
+    const directDriveUrl = `https://docs.google.com/uc?export=download&id=${id}`;
+    
+    // We route the raw image through a public CORS proxy. This simply adds the browser-required 
+    // "allow" headers so the canvas doesn't block the image. It does not scan or store your files.
+    const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(directDriveUrl)}`;
+    
+    return [
+      proxiedUrl,
+      directDriveUrl, // Fallback directly to Drive
+      rawUrl          // Final fallback to original URL
+    ];
+  }
+
+  let imageLoadFailures = [];
+
+  function loadImageFromUrl(url){
+    return new Promise((resolve)=>{
+      if(!url){ resolve(null); return; }
+      const originalUrl = String(url).trim();
+      const candidates = driveCandidateUrls(originalUrl);
+      let i = 0;
+      function tryNext(){
+        if(i >= candidates.length){
+          imageLoadFailures.push({url: originalUrl, candidatesTried: candidates.length});
+          resolve(null); 
+          return;
+        }
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = ()=>resolve(img);
+        img.onerror = ()=>{ i++; tryNext(); };
+        img.src = candidates[i];
+      }
+      tryNext();
+    });
+  }
+
+  // Loads an image and, if the layer has removeBackground enabled, returns the
+  // background-removed version instead (cached per-URL so repeated rows/regenerates are fast).
+  async function loadImageForLayer(url, layer){
+    const baseImg = await loadImageFromUrl(url);
+    if(!baseImg) return null;
+    if(!isBgRemovalActiveForLayer(layer)) return baseImg;
+    try{
+      const cutout = await getBackgroundRemovedImage(String(url).trim(), baseImg);
+      return cutout || baseImg; // fall back to original if removal failed
+    }catch(err){
+      console.error('Background removal error, using original image instead.', err);
+      return baseImg;
+    }
+  }
+
+  function wrapAndFitText(ctx, text, maxWidth, maxHeight, baseFontSize, fontWeight, fontFamily){
+    let fontSize = baseFontSize;
+    let lines = [];
+    const lineHeightFactor = 1.18;
+    while(fontSize >= 8){
+      ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+      lines = wrapText(ctx, text, maxWidth);
+      const totalHeight = lines.length * fontSize * lineHeightFactor;
+      if(totalHeight <= maxHeight) break;
+      fontSize -= 1;
+    }
+    return {fontSize, lines, lineHeight: fontSize*lineHeightFactor};
+  }
+
+  function wrapText(ctx, text, maxWidth){
+    const words = String(text).split(/\s+/);
+    const lines = [];
+    let current = '';
+    words.forEach(word=>{
+      const test = current ? current+' '+word : word;
+      if(ctx.measureText(test).width > maxWidth && current){
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    });
+    if(current) lines.push(current);
+    return lines;
+  }
+
+  function drawImageCover(ctx, img, x, y, w, h, fit, transform){
+    const ir = img.naturalWidth/img.naturalHeight;
+    const br = w/h;
+    const zoom = (transform && transform.zoom) ? transform.zoom : 1;
+    const offsetX = (transform && transform.offsetX) ? transform.offsetX : 0; 
+    const offsetY = (transform && transform.offsetY) ? transform.offsetY : 0;
+    let sx,sy,sw,sh;
+    if(fit==='contain'){
+      let dw,dh;
+      if(ir > br){ dw = w; dh = w/ir; } else { dh = h; dw = h*ir; }
+      const dx = x + (w-dw)/2, dy = y + (h-dh)/2;
+      ctx.drawImage(img, dx,dy,dw,dh);
+      return;
+    }
+    if(ir > br){ sh = img.naturalHeight; sw = sh*br; sy = 0; }
+    else { sw = img.naturalWidth; sh = sw/br; sx = 0; }
+    let baseSx = (ir > br) ? (img.naturalWidth-sw)/2 : 0;
+    let baseSy = (ir > br) ? 0 : (img.naturalHeight-sh)/2;
+    const z = Math.max(1, zoom);
+    const zsw = sw/z, zsh = sh/z;
+    const slackX = sw - zsw, slackY = sh - zsh; 
+    sx = baseSx + slackX/2 + offsetX*(slackX/2);
+    sy = baseSy + slackY/2 + offsetY*(slackY/2);
+    sx = Math.max(0, Math.min(img.naturalWidth-zsw, sx));
+    sy = Math.max(0, Math.min(img.naturalHeight-zsh, sy));
+    ctx.drawImage(img, sx,sy,zsw,zsh, x,y,w,h);
+  }
+
+  function canvasToBlob(canvas, format, quality){
+    const mime = format==='jpg' ? 'image/jpeg' : 'image/png';
+    return new Promise(resolve=>{
+      if(format==='jpg'){
+        canvas.toBlob(blob=>resolve(blob), mime, quality===undefined?0.92:quality);
+      } else {
+        canvas.toBlob(blob=>resolve(blob), mime);
+      }
+    });
+  }
+
+  async function renderRow(row, overrides, format, quality){
+    overrides = overrides || {};
+    await document.fonts.ready; 
+    renderCanvas.width = state.naturalW;
+    renderCanvas.height = state.naturalH;
+    renderCtx.clearRect(0,0,renderCanvas.width, renderCanvas.height);
+    if(format==='jpg'){
+      renderCtx.fillStyle = '#ffffff';
+      renderCtx.fillRect(0,0,renderCanvas.width, renderCanvas.height);
+    }
+    renderCtx.drawImage(state.templateImg, 0,0, state.naturalW, state.naturalH);
+
+    for(const layer of state.layers){
+      const col = state.columnMap[layer.id];
+      const rawValue = (col===''||col===undefined||col===null) ? '' : row[col];
+      const value = (overrides[layer.id]!==undefined) ? overrides[layer.id] : rawValue;
+      if(layer.type==='text'){
+        if(!value) continue;
+        const pad = 4;
+        const {fontSize, lines, lineHeight} = wrapAndFitText(
+          renderCtx, String(value), layer.w-pad*2, layer.h-pad*2,
+          layer.fontSize, layer.fontWeight, layer.fontFamily
+        );
+        renderCtx.font = `${layer.fontWeight} ${fontSize}px ${layer.fontFamily}`;
+        renderCtx.fillStyle = layer.fontColor;
+        renderCtx.textBaseline = 'alphabetic';
+        renderCtx.textAlign = layer.textAlign;
+        const totalTextHeight = lines.length*lineHeight;
+        let startY;
+        if(layer.vAlign==='top') startY = layer.y + fontSize;
+        else if(layer.vAlign==='bottom') startY = layer.y + layer.h - totalTextHeight + fontSize;
+        else startY = layer.y + (layer.h-totalTextHeight)/2 + fontSize;
+        let tx = layer.x;
+        if(layer.textAlign==='center') tx = layer.x + layer.w/2;
+        else if(layer.textAlign==='right') tx = layer.x + layer.w;
+        lines.forEach((line,i)=>{
+          renderCtx.fillText(line, tx, startY + i*lineHeight);
+        });
+      } else {
+        if(!value) continue;
+        const img = await loadImageForLayer(String(value), layer);
+        if(img){
+          const transform = overrides[layer.id+'__transform'];
+          renderCtx.save();
+          renderCtx.beginPath();
+          renderCtx.rect(layer.x, layer.y, layer.w, layer.h);
+          renderCtx.clip();
+          drawImageCover(renderCtx, img, layer.x, layer.y, layer.w, layer.h, layer.imageFit, transform);
+          renderCtx.restore();
+        }
+      }
+    }
+    return canvasToBlob(renderCanvas, format, quality);
+  }
+
+  function safeFileName(s){
+    return String(s).replace(/[^a-z0-9\-_]+/gi,'_').slice(0,60) || 'untitled';
+  }
+
+  function baseNameFor(row, fnCol, index){
+    const fnHasValue = (fnCol!==''&&fnCol!==undefined&&fnCol!==null) && row[fnCol];
+    if(fnHasValue) return safeFileName(row[fnCol]);
+    return `${safeFileName(state.templateName)}_${String(index+1).padStart(3,'0')}`;
+  }
+
+  function textLayersForMapping(){
+    return state.layers.filter(l=>l.type==='text');
+  }
+
+  function anyLayerUsesBackgroundRemoval(){
+    return state.layers.some(l=>isBgRemovalActiveForLayer(l));
+  }
+
+  async function generateAll(){
+    const grid = document.getElementById('outputGrid');
+    grid.innerHTML='';
+    state.generated = [];
+    imageLoadFailures = [];
+    document.getElementById('imageFailBanner').style.display = 'none';
+    const progressWrap = document.getElementById('progressWrap');
+    const fill = document.getElementById('progressFill');
+    const text = document.getElementById('progressText');
+    progressWrap.style.display='flex';
+    const total = state.sheetRows.length;
+    document.getElementById('btnDownloadZip').disabled = true;
+    const format = document.getElementById('exportFormatSelect').value;
+
+    const usesBgRemoval = anyLayerUsesBackgroundRemoval();
+    if(usesBgRemoval && !bgRemovalAvailable()){
+      text.textContent = 'Loading background removal model…';
+    }
+
+    for(let i=0;i<total;i++){
+      const row = state.sheetRows[i];
+      const entry = {
+        id: 'G'+i,
+        rowIndex: i,
+        overrides: {},
+        format: format,
+        baseName: baseNameFor(row, state.filenameColumn, i),
+        blob: null, url: null
+      };
+      if(usesBgRemoval){
+        text.textContent = `${i+1} / ${total} — removing backgrounds can take a few seconds per image`;
+      }
+      const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+      entry.blob = blob;
+      entry.url = URL.createObjectURL(blob);
+      entry.usedBgRemoval = usesBgRemoval;
+      state.generated.push(entry);
+
+      grid.appendChild(buildOutputItemEl(entry));
+
+      fill.style.width = (((i+1)/total)*100)+'%';
+      if(!usesBgRemoval) text.textContent = `${i+1} / ${total}`;
+      await new Promise(r=>setTimeout(r,0));
+    }
+    document.getElementById('btnDownloadZip').disabled = false;
+    showImageFailuresIfAny();
+  }
+
+  function showImageFailuresIfAny(){
+    const banner = document.getElementById('imageFailBanner');
+    if(!imageLoadFailures.length){ banner.style.display = 'none'; return; }
+    const seen = new Map();
+    imageLoadFailures.forEach(f=>{ if(!seen.has(f.url)) seen.set(f.url, f); });
+    const unique = Array.from(seen.values()).slice(0, 8);
+    const moreCount = seen.size - unique.length;
+    banner.innerHTML = `
+      <span class="ifb-title">${seen.size} image link${seen.size===1?'':'s'} couldn't be loaded</span>
+      These boxes were left empty in the banners above. This usually means the Google Drive file
+      isn't shared as "Anyone with the link can view," or the link doesn't point to an actual file.
+      <ul>${unique.map(f=>`<li>${escapeHtml(f.url)}</li>`).join('')}</ul>
+      ${moreCount>0 ? `<div class="ifb-tip">+ ${moreCount} more</div>` : ''}
+      <div class="ifb-tip">Fix sharing on these files in Google Drive, then click "Generate / refresh all" again.</div>
+    `;
+    banner.style.display = 'block';
+  }
+
+  function extFor(format){ return format==='jpg' ? 'jpg' : 'png'; }
+
+  function buildOutputItemEl(entry){
+    const isEdited = Object.keys(entry.overrides).length > 0;
+    const item = document.createElement('div');
+    item.className='output-item';
+    item.dataset.id = entry.id;
+    const fname = `${entry.baseName}.${extFor(entry.format)}`;
+    item.innerHTML = `
+      ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
+      <div class="oi-thumb">${entry.usedBgRemoval ? '<span class="bgr-pill">BG removed</span>' : ''}<img src="${entry.url}" alt="${escapeHtml(fname)}"></div>
+      <div class="oi-foot">
+        <div class="oi-name-wrap">
+          <input class="oi-name-input" type="text" value="${escapeHtml(entry.baseName)}" title="Rename this file">
+          <span class="oi-ext">.${extFor(entry.format)}</span>
+        </div>
+        <div class="oi-actions">
+          <select class="oi-fmt">
+            <option value="png" ${entry.format==='png'?'selected':''}>PNG</option>
+            <option value="jpg" ${entry.format==='jpg'?'selected':''}>JPG</option>
+          </select>
+          <a href="${entry.url}" download="${escapeHtml(fname)}" title="Download">↓</a>
+        </div>
+      </div>`;
+    item.querySelector('.oi-thumb').addEventListener('click', ()=> openEditModal(entry.id) );
+    item.querySelector('.oi-fmt').addEventListener('change', async (e)=>{
+      await switchItemFormat(entry.id, e.target.value);
+    });
+    const nameInput = item.querySelector('.oi-name-input');
+    nameInput.addEventListener('click', e=> e.stopPropagation());
+    nameInput.addEventListener('change', ()=>{
+      const cleaned = safeFileName(nameInput.value) || entry.baseName;
+      entry.baseName = cleaned;
+      refreshOutputItemEl(entry);
+    });
+    nameInput.addEventListener('keydown', e=>{
+      if(e.key==='Enter') nameInput.blur();
+    });
+    return item;
+  }
+
+  function refreshOutputItemEl(entry){
+    const old = document.querySelector(`.output-item[data-id="${entry.id}"]`);
+    if(old) old.replaceWith(buildOutputItemEl(entry));
+  }
+
+  async function switchItemFormat(id, format){
+    const entry = state.generated.find(g=>g.id===id);
+    if(!entry) return;
+    entry.format = format;
+    const row = state.sheetRows[entry.rowIndex];
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    URL.revokeObjectURL(entry.url);
+    entry.blob = blob;
+    entry.url = URL.createObjectURL(blob);
+    refreshOutputItemEl(entry);
+  }
+
+  document.getElementById('btnRegenerate').addEventListener('click', generateAll);
+
+  document.getElementById('btnDownloadZip').addEventListener('click', async ()=>{
+    const zip = new JSZip();
+    state.generated.forEach(g=>{
+      zip.file(`${g.baseName}.${extFor(g.format)}`, g.blob);
+    });
+    const content = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = safeFileName(state.templateName)+'_adaptations.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  document.getElementById('exportFormatSelect').addEventListener('change', ()=>{
+  });
+
+  /* ----- Rename exports: individually (inline input above) and all together ----- */
+  const renameAllBar = document.getElementById('renameAllBar');
+  document.getElementById('btnRenameAllToggle').addEventListener('click', ()=>{
+    renameAllBar.style.display = (renameAllBar.style.display==='none' || !renameAllBar.style.display) ? 'flex' : 'none';
+  });
+  document.getElementById('btnRenameApply').addEventListener('click', ()=>{
+    if(!state.generated.length) return;
+    const prefix = document.getElementById('renamePrefix').value.trim();
+    const suffix = document.getElementById('renameSuffix').value.trim();
+    let start = parseInt(document.getElementById('renameStart').value, 10);
+    if(isNaN(start)) start = 1;
+    state.generated.forEach((entry, i)=>{
+      const num = String(start + i).padStart(3, '0');
+      const parts = [prefix, num, suffix].filter(Boolean);
+      entry.baseName = safeFileName(parts.join('_'));
+      refreshOutputItemEl(entry);
+    });
+  });
+  document.getElementById('btnRenameReset').addEventListener('click', ()=>{
+    state.generated.forEach(entry=>{
+      const row = state.sheetRows[entry.rowIndex];
+      entry.baseName = baseNameFor(row, state.filenameColumn, entry.rowIndex);
+      refreshOutputItemEl(entry);
+    });
+  });
+
+  /* ----- Edit-export modal: per-banner text overrides ----- */
+  const editModalOverlay = document.getElementById('editModalOverlay');
+  const editModalFields = document.getElementById('editModalFields');
+  const editModalPreview = document.getElementById('editModalPreview');
+  const editModalFormat = document.getElementById('editModalFormat');
+  let editingEntryId = null;
+  let activeRepositionResizeListeners = [];
+
+  function imageLayersForMapping(){
+    return state.layers.filter(l=>l.type==='image' || l.type==='logo');
+  }
+
+  function buildImageRepositionField(layer, entry, row){
+    const col = state.columnMap[layer.id];
+    const url = (col===''||col===undefined||col===null) ? '' : String(row[col] ?? '');
+    const wrap = document.createElement('div');
+    wrap.className = 'mf-row';
+    if(!url){
+      wrap.innerHTML = `<span class="mf-label">${escapeHtml(layer.name)}</span><span class="mf-tag">No image URL mapped for this row.</span>`;
+      return wrap;
+    }
+    const transformKey = layer.id+'__transform';
+    const t = entry.overrides[transformKey] || {zoom:1, offsetX:0, offsetY:0};
+
+    const stage = document.createElement('div');
+    stage.className = 'reposition-stage';
+    stage.style.aspectRatio = `${layer.w} / ${layer.h}`;
+    const img = document.createElement('img');
+    
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    stage.appendChild(img);
+
+    const zoomRow = document.createElement('div');
+    zoomRow.className = 'reposition-zoom-row';
+    const zoomSlider = document.createElement('input');
+    zoomSlider.type = 'range'; zoomSlider.min='1'; zoomSlider.max='3'; zoomSlider.step='0.05'; zoomSlider.value = t.zoom;
+    const zoomLabel = document.createElement('span');
+    zoomLabel.className = 'zoom-label';
+    zoomLabel.textContent = Math.round(t.zoom*100)+'%';
+    zoomRow.appendChild(zoomSlider); zoomRow.appendChild(zoomLabel);
+
+    const hint = document.createElement('p');
+    hint.className = 'reposition-hint';
+    hint.textContent = isBgRemovalActiveForLayer(layer)
+      ? 'Drag the photo to reposition, use the slider to zoom. (Background removal preview shown after Apply.)'
+      : 'Drag the photo to reposition, use the slider to zoom.';
+
+    wrap.innerHTML = `<span class="mf-label">${escapeHtml(layer.name)}</span>`;
+    wrap.appendChild(stage);
+    wrap.appendChild(zoomRow);
+    wrap.appendChild(hint);
+
+    function layout(){
+      const stageW = stage.clientWidth, stageH = stage.clientHeight;
+      const boxAR = layer.w/layer.h;
+      img.onload = paint;
+      if(img.complete && img.naturalWidth) paint();
+      function paint(){
+        const ir = img.naturalWidth/img.naturalHeight;
+        const scaleToStage = (ir > boxAR) ? (stageH/img.naturalHeight) : (stageW/img.naturalWidth);
+        const z = Math.max(1, parseFloat(zoomSlider.value));
+        const dispW = img.naturalWidth*scaleToStage*z;
+        const dispH = img.naturalHeight*scaleToStage*z;
+        img.style.width = dispW+'px';
+        img.style.height = dispH+'px';
+        const slackX = dispW - stageW, slackY = dispH - stageH;
+        const curT = entry.overrides[transformKey] || {zoom:1, offsetX:0, offsetY:0};
+        const left = -((slackX/2) + curT.offsetX*(slackX/2));
+        const top = -((slackY/2) + curT.offsetY*(slackY/2));
+        img.style.left = clampPx(left, -slackX, 0)+'px';
+        img.style.top = clampPx(top, -slackY, 0)+'px';
+        img.dataset.slackX = slackX; img.dataset.slackY = slackY;
+      }
+    }
+    function clampPx(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    let dragging = false, dragStart = {x:0,y:0}, startOffset = {x:0,y:0};
+    stage.addEventListener('pointerdown', e=>{
+      dragging = true;
+      stage.classList.add('dragging');
+      dragStart = {x:e.clientX, y:e.clientY};
+      const curT = entry.overrides[transformKey] || {zoom:1, offsetX:0, offsetY:0};
+      startOffset = {x:curT.offsetX, y:curT.offsetY};
+      stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      const slackX = parseFloat(img.dataset.slackX)||0, slackY = parseFloat(img.dataset.slackY)||0;
+      const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+      const newOffsetX = slackX>0 ? clampPx(startOffset.x - dx/(slackX/2), -1, 1) : 0;
+      const newOffsetY = slackY>0 ? clampPx(startOffset.y - dy/(slackY/2), -1, 1) : 0;
+      setTransform({offsetX:newOffsetX, offsetY:newOffsetY});
+      layout();
+    });
+    ;['pointerup','pointercancel'].forEach(ev=>stage.addEventListener(ev, ()=>{
+      dragging = false;
+      stage.classList.remove('dragging');
+    }));
+
+    zoomSlider.addEventListener('input', ()=>{
+      zoomLabel.textContent = Math.round(parseFloat(zoomSlider.value)*100)+'%';
+      setTransform({zoom: parseFloat(zoomSlider.value)});
+      layout();
+    });
+
+    function setTransform(partial){
+      const curT = entry.overrides[transformKey] || {zoom:1, offsetX:0, offsetY:0};
+      entry.overrides[transformKey] = {...curT, ...partial};
+    }
+
+    requestAnimationFrame(layout);
+    window.addEventListener('resize', layout);
+    activeRepositionResizeListeners.push(layout);
+    return wrap;
+  }
+
+  function openEditModal(id){
+    const entry = state.generated.find(g=>g.id===id);
+    if(!entry) return;
+    activeRepositionResizeListeners.forEach(fn=>window.removeEventListener('resize', fn));
+    activeRepositionResizeListeners = [];
+    editingEntryId = id;
+    const row = state.sheetRows[entry.rowIndex];
+    document.getElementById('editModalTitle').textContent = `Edit — ${entry.baseName}`;
+    editModalPreview.src = entry.url;
+    editModalFormat.value = entry.format;
+
+    const textLayers = textLayersForMapping();
+    const imageLayers = imageLayersForMapping();
+    editModalFields.innerHTML = '';
+    if(!textLayers.length && !imageLayers.length){
+      editModalFields.innerHTML = '<p class="hint">This template has no editable layers.</p>';
+    }
+    textLayers.forEach(layer=>{
+      const col = state.columnMap[layer.id];
+      const original = (col===''||col===undefined||col===null) ? '' : (row[col] ?? '');
+      const currentVal = entry.overrides[layer.id] !== undefined ? entry.overrides[layer.id] : original;
+      const wrap = document.createElement('div');
+      wrap.className = 'mf-row';
+      wrap.innerHTML = `
+        <span class="mf-label">${escapeHtml(layer.name)}</span>
+        <span class="mf-tag">Spreadsheet says: "${escapeHtml(String(original).slice(0,60))}"</span>
+        <textarea data-layer-id="${layer.id}" rows="2">${escapeHtml(String(currentVal))}</textarea>`;
+      editModalFields.appendChild(wrap);
+    });
+    imageLayers.forEach(layer=>{
+      editModalFields.appendChild(buildImageRepositionField(layer, entry, row));
+    });
+    editModalOverlay.classList.add('open');
+  }
+
+  function closeEditModal(){
+    editModalOverlay.classList.remove('open');
+    editingEntryId = null;
+    activeRepositionResizeListeners.forEach(fn=>window.removeEventListener('resize', fn));
+    activeRepositionResizeListeners = [];
+  }
+
+  document.getElementById('btnCloseEditModal').addEventListener('click', closeEditModal);
+  editModalOverlay.addEventListener('click', e=>{ if(e.target===editModalOverlay) closeEditModal(); });
+
+  document.getElementById('btnResetOverride').addEventListener('click', async ()=>{
+    const entry = state.generated.find(g=>g.id===editingEntryId);
+    if(!entry) return;
+    const kept = {};
+    Object.keys(entry.overrides).forEach(k=>{
+      if(k.endsWith('__transform')) kept[k] = entry.overrides[k];
+    });
+    entry.overrides = kept;
+    const row = state.sheetRows[entry.rowIndex];
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    URL.revokeObjectURL(entry.url);
+    entry.blob = blob; entry.url = URL.createObjectURL(blob);
+    refreshOutputItemEl(entry);
+    openEditModal(entry.id); 
+  });
+
+  document.getElementById('btnApplyAndDownload').addEventListener('click', async ()=>{
+    const entry = state.generated.find(g=>g.id===editingEntryId);
+    if(!entry) return;
+    const row = state.sheetRows[entry.rowIndex];
+    const overrides = {...entry.overrides};
+    editModalFields.querySelectorAll('textarea[data-layer-id]').forEach(ta=>{
+      const layerId = ta.dataset.layerId;
+      const col = state.columnMap[layerId];
+      const original = (col===''||col===undefined||col===null) ? '' : String(row[col] ?? '');
+      if(ta.value !== original) overrides[layerId] = ta.value;
+      else delete overrides[layerId];
+    });
+    entry.overrides = overrides;
+    entry.format = editModalFormat.value;
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    URL.revokeObjectURL(entry.url);
+    entry.blob = blob;
+    entry.url = URL.createObjectURL(blob);
+    refreshOutputItemEl(entry);
+
+    const fname = `${entry.baseName}.${extFor(entry.format)}`;
+    const a = document.createElement('a');
+    a.href = entry.url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    closeEditModal();
+  });
+
+  document.querySelector('[data-step="4"]').addEventListener('click', ()=>{
+    if(!state.generated.length && state.sheetRows.length) generateAll();
+  });
+  document.getElementById('toStep4') && document.getElementById('toStep4').addEventListener('click', ()=>{
+    setTimeout(()=>{ if(!state.generated.length && state.sheetRows.length) generateAll(); }, 50);
+  });
+
+  /* ===================== SAVE / LOAD PROJECT (local + file-based "cloud") ===================== */
+  const LS_KEY = 'adapt_tool_project_v1';
+
+  function arrayBufferToBase64(buffer){
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const chunk = 0x8000;
+    for(let i=0; i<bytes.length; i+=chunk){
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+    }
+    return btoa(binary);
+  }
+
+  function base64ToArrayBuffer(base64){
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  function serializeProject(){
+    return {
+      version: 1,
+      savedAt: Date.now(),
+      templateName: state.templateName,
+      templateDataUrl: state.templateDataUrl,
+      naturalW: state.naturalW,
+      naturalH: state.naturalH,
+      layers: state.layers,
+      layerSeq, fontSeq,
+      customFonts: state.customFonts,
+      rawSheetFile: rawSheetFile,
+      hasHeaderRow: document.getElementById('hasHeaderRow').checked,
+      columnMap: state.columnMap,
+      filenameColumn: state.filenameColumn,
+      removeBackgroundByType: state.removeBackgroundByType,
+      bgRemovalQuality: state.bgRemovalQuality,
+      bgRemovalTrim: state.bgRemovalTrim,
+      bgRemovalFill: state.bgRemovalFill,
+      bgRemovalFillColor: state.bgRemovalFillColor,
+      exportFormat: document.getElementById('exportFormatSelect') ? document.getElementById('exportFormatSelect').value : 'png',
+      sourceBadge: {
+        visible: sourceBadge.style.display === 'flex',
+        icon: document.getElementById('sourceBadgeIcon').textContent,
+        name: document.getElementById('sourceBadgeName').textContent
+      }
+    };
+  }
+
+  function restoreFont(f){
+    return new Promise(resolve=>{
+      try{
+        const buf = base64ToArrayBuffer(f.data);
+        const fontFace = new FontFace(f.family, buf);
+        fontFace.load().then(loaded=>{
+          document.fonts.add(loaded);
+          state.customFonts.push({ id:f.id, name:f.name, family:f.family, fileName:f.fileName, data:f.data });
+          resolve();
+        }).catch(()=>resolve());
+      }catch(err){ resolve(); }
+    });
+  }
+
+  function loadProjectData(data){
+    return new Promise(resolve=>{
+      function finishRestore(){
+        state.layers = data.layers || [];
+        layerSeq = data.layerSeq || 1;
+        fontSeq = data.fontSeq || 1;
+        state.removeBackgroundByType = data.removeBackgroundByType || {image:false, logo:false};
+        state.bgRemovalQuality = data.bgRemovalQuality || 'medium';
+        state.bgRemovalTrim = data.bgRemovalTrim !== undefined ? data.bgRemovalTrim : true;
+        state.bgRemovalFill = !!data.bgRemovalFill;
+        state.bgRemovalFillColor = data.bgRemovalFillColor || '#ffffff';
+        state.columnMap = data.columnMap || {};
+        state.filenameColumn = data.filenameColumn || '';
+        state.selectedLayerId = null;
+        state.customFonts = [];
+        elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
+        elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
+        elBgRemoveQuality.value = state.bgRemovalQuality;
+        elBgRemoveTrimToggle.checked = state.bgRemovalTrim;
+        elBgRemoveFillToggle.checked = state.bgRemovalFill;
+        elBgRemoveFillColorField.style.display = state.bgRemovalFill ? 'block' : 'none';
+        elBgRemoveFillColor.value = state.bgRemovalFillColor;
+        elBgRemoveFillColorSwatch.value = state.bgRemovalFillColor;
+        updateBgRemovalStatusText();
+        const exportFmtSel = document.getElementById('exportFormatSelect');
+        if(exportFmtSel && data.exportFormat) exportFmtSel.value = data.exportFormat;
+
+        const fontPromises = (data.customFonts || []).map(restoreFont);
+        Promise.all(fontPromises).then(()=>{
+          renderFontList();
+          rebuildFontFamilyOptions();
+
+          rawSheetFile = data.rawSheetFile || null;
+          if(rawSheetFile && rawSheetFile.length){
+            document.getElementById('hasHeaderRow').checked = !!data.hasHeaderRow;
+            applyHeaderToggle();
+            document.getElementById('mappingCard').style.display = 'block';
+            document.getElementById('toStep4').disabled = false;
+            unlockStep(4);
+            if(document.getElementById('filenameColumn')){
+              document.getElementById('filenameColumn').value = (state.filenameColumn===''||state.filenameColumn===undefined) ? '' : String(state.filenameColumn);
+            }
+            if(data.sourceBadge && data.sourceBadge.visible){
+              showSheetSourceBadge(data.sourceBadge.icon==='🔗' ? 'url' : 'file', data.sourceBadge.name);
+            }
+          }
+
+          if(state.templateImg){
+            unlockStep(2);
+            setupEditorCanvas();
+            if(state.layers.length){
+              unlockStep(3);
+              document.getElementById('toStep3').disabled = false;
+            }
+          }
+          resetHistory();
+          goToStep(state.templateImg ? (rawSheetFile && rawSheetFile.length ? 3 : 2) : 1);
+          resolve();
+        });
+      }
+
+      if(data.templateDataUrl){
+        const img = new Image();
+        img.onload = ()=>{
+          state.templateImg = img;
+          state.templateDataUrl = data.templateDataUrl;
+          state.templateName = data.templateName || 'template';
+          state.naturalW = img.naturalWidth;
+          state.naturalH = img.naturalHeight;
+          finishRestore();
+        };
+        img.onerror = ()=>{ finishRestore(); };
+        img.src = data.templateDataUrl;
+      } else {
+        state.templateImg = null;
+        state.templateName = data.templateName || 'template';
+        finishRestore();
+      }
+    });
+  }
+
+  function fmtSavedTime(ts){
+    try{ return new Date(ts).toLocaleString(); }catch(err){ return ''; }
+  }
+
+  const saveStatus = document.getElementById('saveStatus');
+
+  function saveProjectToLocalStorage(silent){
+    try{
+      const data = serializeProject();
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      if(!silent){
+        saveStatus.textContent = `Saved locally at ${fmtSavedTime(data.savedAt)}`;
+        saveStatus.classList.remove('err');
+      }
+      return true;
+    }catch(err){
+      console.error('Local save failed', err);
+      if(!silent){
+        saveStatus.textContent = "Couldn't save locally (browser storage is full). Use \"Export project file\" instead.";
+        saveStatus.classList.add('err');
+      }
+      return false;
+    }
+  }
+
+  function loadProjectFromLocalStorage(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    try{ return JSON.parse(raw); }catch(err){ return null; }
+  }
+
+  document.getElementById('btnSaveProject').addEventListener('click', ()=> saveProjectToLocalStorage(false) );
+
+  document.getElementById('btnExportProject').addEventListener('click', ()=>{
+    const data = serializeProject();
+    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = safeFileName(state.templateName || 'adapt-project') + '.adapt.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    saveStatus.textContent = 'Project file downloaded — store it in Drive, Dropbox, email, etc.';
+    saveStatus.classList.remove('err');
+  });
+
+  const importProjectInput = document.getElementById('importProjectInput');
+  document.getElementById('btnImportProject').addEventListener('click', ()=> importProjectInput.click() );
+  importProjectInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        await loadProjectData(data);
+        saveStatus.textContent = `Loaded project "${data.templateName||'template'}" from file.`;
+        saveStatus.classList.remove('err');
+      }catch(err){
+        console.error(err);
+        alert("Couldn't read that project file. Make sure it's a .json file exported from Adapt.");
+      }
+    };
+    reader.readAsText(file);
+    importProjectInput.value = '';
+  });
+
+  // Offer to resume an autosaved project on page load.
+  const resumeBanner = document.getElementById('resumeBanner');
+  const savedProject = loadProjectFromLocalStorage();
+  if(savedProject){
+    document.getElementById('resumeBannerText').textContent =
+      `You have a saved project ("${savedProject.templateName||'template'}", saved ${fmtSavedTime(savedProject.savedAt)}). Resume where you left off?`;
+    resumeBanner.style.display = 'flex';
+  }
+  document.getElementById('btnResumeProject').addEventListener('click', async ()=>{
+    resumeBanner.style.display = 'none';
+    await loadProjectData(savedProject);
+  });
+  document.getElementById('btnDiscardProject').addEventListener('click', ()=>{
+    resumeBanner.style.display = 'none';
+  });
+
+  // Light autosave: keep localStorage in sync a couple of seconds after edits,
+  // so a crash/closed tab doesn't lose work. Only runs once a template exists.
+  let autosaveTimer = null;
+  function scheduleAutosave(){
+    if(!state.templateImg) return;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(()=> saveProjectToLocalStorage(true), 3000);
+  }
+  document.addEventListener('input', scheduleAutosave, true);
+  document.addEventListener('change', scheduleAutosave, true);
+
+})();
+</script>
+</body>
+</html>
