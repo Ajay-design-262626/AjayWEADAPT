@@ -153,32 +153,22 @@
   .box.image-type{ border-style:solid; }
   .box.logo-type{ border-style:dashed; }
 
-  /* ---------- layer tabs (relocated to layout-step toolbar as pill buttons) ---------- */
-  .layer-tabs{ display:flex; gap:6px; }
-  .layer-tab{
-    font-size:12.5px; font-weight:700; padding:9px 14px; border-radius:100px;
-    background:#fff; border:1px solid var(--line-strong); color:var(--ink); cursor:pointer;
-    display:flex; align-items:center; justify-content:center; gap:6px;
+  /* ---------- WE-style sidebar rows (Template Name / Layers / layer rows) ---------- */
+  .wl-row{
+    display:flex; align-items:center; gap:10px; padding:13px 14px; border-radius:10px;
+    font-size:13.5px; font-weight:700; cursor:default;
   }
-  .layer-tab .tab-swatch{ width:7px; height:7px; border-radius:1px; }
-  .layer-tab.active{ background:var(--ink); color:#fff; }
-  .layer-tab .tab-count{ background:var(--surface-raised); color:var(--ink); font-size:10px; font-weight:700; padding:1px 5px; border-radius:100px; }
-  .layer-tab.active .tab-count{ background:rgba(255,255,255,.25); color:#fff; }
+  .wl-row .wl-icon{ width:17px; height:17px; flex-shrink:0; display:block; }
+  .wl-row .wl-label{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wl-name-row{ background:var(--surface-raised); color:var(--ink); }
+  .wl-row-dark{ background:#2C2C2C; color:#fff; cursor:pointer; }
+  .wl-row-dark.static{ cursor:default; }
 
-  .layer-list{ display:flex; flex-direction:column; gap:6px; }
-  .layer-item{
-    display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line);
-    border-radius:3px; background:var(--surface-raised); cursor:pointer; font-size:12.5px;
-  }
-  .layer-item.selected{ border-color:var(--warn); background:#fbebe9; }
-  .layer-item .swatch{ width:9px; height:9px; border-radius:1px; flex-shrink:0; }
-  .layer-item .swatch.text{ background:var(--accent); }
-  .layer-item .swatch.image{ background:#6fa0d8; }
-  .layer-item .swatch.logo{ background:#c9a35e; }
-  .layer-item .lname{ flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .layer-item .ltype{ color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; }
-  .layer-item .ldel{ color:var(--muted); background:none; border:none; font-size:14px; padding:0 2px; line-height:1; }
-  .layer-item .ldel:hover{ color:var(--warn); }
+  .layer-list{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+  .layer-item{ position:relative; }
+  .layer-item.selected{ outline:2px solid var(--warn); outline-offset:1px; }
+  .layer-item .ldel{ color:#fff; opacity:.6; background:none; border:none; font-size:15px; padding:0 2px; line-height:1; }
+  .layer-item .ldel:hover{ opacity:1; }
 
   .addrow{ display:flex; gap:6px; margin-top:10px; }
   .addrow select{ flex:1; }
@@ -237,52 +227,40 @@
   .image-fail-banner li{ margin-bottom:3px; word-break:break-all; font-family:var(--mono); font-size:11px; color:var(--muted); }
   .image-fail-banner .ifb-tip{ margin-top:8px; color:var(--muted); }
 
-  .output-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px; }
-  .output-item{ border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--surface-raised); position:relative; }
-  .output-item .oi-thumb{ position:relative; cursor:pointer; }
-  .output-item .oi-thumb:hover::after{
-    content:'Click to review'; position:absolute; inset:0; background:rgba(0,0,0,.55); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;
+  /* ---------- final page: single large preview + strip + inline edit fields ---------- */
+  .final-layout{ display:grid; grid-template-columns:1fr 381px; gap:24px; align-items:start; margin-top:16px; }
+  .final-preview-frame{
+    background:#D9D9D9; border-radius:var(--radius-lg); overflow:hidden; display:flex; align-items:center;
+    justify-content:center; min-height:300px;
   }
-  .output-item img{ width:100%; display:block; background:var(--surface-raised); }
-  .output-item .oi-download{
-    position:absolute; bottom:8px; right:8px; width:28px; height:28px; border-radius:6px;
-    background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center;
-    text-decoration:none; z-index:2;
+  .final-preview-frame img{ max-width:100%; max-height:70vh; display:block; }
+  .output-strip{ display:flex; gap:8px; overflow-x:auto; margin-top:12px; }
+  .output-thumb{
+    flex-shrink:0; width:70px; height:50px; border-radius:6px; overflow:hidden; cursor:pointer;
+    border:2px solid transparent; background:var(--surface-raised); position:relative;
   }
-  .output-item .edited-badge{
-    position:absolute; top:6px; left:6px; background:var(--warn); color:#fff; font-size:10px; font-weight:700;
-    padding:2px 6px; border-radius:100px; z-index:2; text-transform:uppercase; letter-spacing:.02em;
+  .output-thumb.active{ border-color:var(--ink); }
+  .output-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .output-thumb .ot-badge{
+    position:absolute; top:2px; left:2px; background:var(--warn); color:#fff; font-size:8px; font-weight:700;
+    padding:1px 4px; border-radius:100px;
   }
-  .output-item .oi-foot{ padding:6px 8px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between; gap:6px; align-items:center; }
-  .output-item .oi-foot a{ color:var(--accent); text-decoration:none; font-weight:600; flex-shrink:0; }
-  .output-item .oi-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .output-item .oi-actions{ display:flex; gap:4px; align-items:center; flex-shrink:0; }
-  .output-item .oi-fmt{ font-size:10px; border:1px solid var(--line-strong); border-radius:2px; padding:1px 3px; background:var(--surface); color:var(--ink); }
+  .final-current-bar{ display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .final-current-bar input[type=text]{ flex:1; min-width:120px; }
+  .final-edit-fields{ display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+  .final-edit-fields textarea{ width:100%; border:1px solid var(--line-strong); border-radius:6px; padding:8px 10px; font-size:14px; font-family:var(--sans); }
 
   .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
   .toolbar .left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-  /* ---------- edit-export modal ---------- */
-  .modal-overlay{
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:100;
-    align-items:center; justify-content:center; padding:24px;
-  }
-  .modal-overlay.open{ display:flex; }
-  .modal-card{ background:var(--surface); border-radius:6px; max-width:760px; width:100%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.5); }
-  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line); }
-  .modal-head h2{ margin:0; font-size:14px; }
-  .modal-body{ display:grid; grid-template-columns:1fr 1fr; gap:0; overflow:auto; flex:1; }
-  .modal-preview{ background:#1e1e1e; display:flex; align-items:center; justify-content:center; padding:16px; border-right:1px solid var(--line); }
-  .modal-preview img{ max-width:100%; max-height:60vh; box-shadow:0 1px 4px rgba(0,0,0,.4); }
-  .modal-fields{ padding:16px 20px; overflow:auto; }
-  .modal-fields .mf-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:5px; display:block; }
-  .modal-fields .mf-row{ margin-bottom:14px; }
-  .modal-fields .mf-tag{ font-size:10px; color:var(--muted); font-weight:600; margin-bottom:3px; display:block; }
+  /* ---------- inline per-row edit fields (final page) ---------- */
+  .mf-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:6px; display:block; }
+  .mf-row{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; }
+  .mf-tag{ font-size:11px; color:var(--muted); font-weight:600; margin-bottom:6px; display:block; }
 
-  /* ---------- image reposition/zoom control (inside edit modal) ---------- */
+  /* ---------- image reposition/zoom control (inline) ---------- */
   .reposition-stage{
-    position:relative; width:100%; max-width:280px; overflow:hidden; border-radius:3px;
+    position:relative; width:100%; max-width:280px; overflow:hidden; border-radius:6px;
     background:#000; cursor:grab; touch-action:none; border:1px solid var(--line-strong);
   }
   .reposition-stage.dragging{ cursor:grabbing; }
@@ -291,8 +269,6 @@
   .reposition-zoom-row input[type=range]{ flex:1; }
   .reposition-zoom-row .zoom-label{ font-size:11px; color:var(--muted); font-family:var(--mono); width:38px; text-align:right; flex-shrink:0; }
   .reposition-hint{ font-size:11px; color:var(--muted); margin-top:6px; }
-  .modal-foot{ display:flex; align-items:center; gap:8px; padding:14px 20px; border-top:1px solid var(--line); }
-  @media (max-width: 640px){ .modal-body{ grid-template-columns:1fr; } .modal-preview{ border-right:none; border-bottom:1px solid var(--line); } }
 
   .footer-nav{ display:flex; justify-content:space-between; margin-top:24px; }
 
@@ -343,15 +319,15 @@
   }
 
   /* ---------- undo/redo ---------- */
-  .undo-redo{ display:flex; gap:4px; }
+  .undo-redo{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
   .undo-redo button{
-    display:flex; align-items:center; justify-content:center; width:30px; height:30px;
-    border:1px solid var(--line-strong); background:var(--surface-raised); color:var(--ink);
-    border-radius:3px;
+    display:flex; align-items:center; justify-content:center; width:40px; height:40px;
+    border:1px solid var(--ink); background:var(--ink); color:#fff;
+    border-radius:10px;
   }
-  .undo-redo button:hover:not(:disabled){ border-color:var(--ink); }
+  .undo-redo button:hover:not(:disabled){ background:#2a2a2a; }
   .undo-redo button:disabled{ opacity:.35; cursor:not-allowed; }
-  .undo-redo button svg{ width:15px; height:15px; display:block; }
+  .undo-redo button svg{ width:17px; height:17px; display:block; }
 
   /* ---------- sticky editor column (Layout page) ---------- */
   #layoutEditor .grid2 > div:first-child{
@@ -398,23 +374,20 @@
   }
   .type-tabs button.active{ background:var(--ink); color:#fff; }
 
-  /* ---------- template strip (multi-template slots) ---------- */
+  /* ---------- template strip (multi-template slots) — connected segmented bar ---------- */
   .template-strip{
-    display:flex; gap:10px; align-items:center; overflow-x:auto; padding:14px 2px 4px; margin-top:10px;
+    display:flex; align-items:stretch; overflow-x:auto; overflow-y:hidden; margin-bottom:16px;
+    border:1px solid var(--line-strong); border-radius:10px;
   }
   .template-chip{
-    display:flex; align-items:center; gap:8px; padding:8px 14px 8px 8px; border-radius:100px;
-    border:1px solid var(--line-strong); background:#fff; font-size:12.5px; font-weight:700; cursor:pointer;
-    flex-shrink:0; white-space:nowrap;
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 22px;
+    border-right:1px solid var(--line-strong); background:#fff; font-size:14px; font-weight:600; cursor:pointer;
+    flex-shrink:0; white-space:nowrap; color:var(--ink);
   }
-  .template-chip.active{ background:var(--ink); color:#fff; }
-  .template-chip .tc-thumb{
-    width:22px; height:22px; border-radius:5px; background:var(--surface-raised); overflow:hidden; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:11px;
-  }
-  .template-chip .tc-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .template-chip.add{ background:#fff; color:var(--ink); }
-  .template-chip .tc-del{ background:none; border:none; color:inherit; opacity:.6; font-size:13px; padding:0; line-height:1; }
+  .template-chip:last-child{ border-right:none; }
+  .template-chip.active{ background:#E5E5E5; }
+  .template-chip.add{ background:#E5E5E5; font-size:16px; font-weight:700; padding-left:26px; padding-right:26px; }
+  .template-chip .tc-del{ background:none; border:none; color:inherit; opacity:.5; font-size:13px; padding:0; line-height:1; margin-left:4px; }
   .template-chip .tc-del:hover{ opacity:1; }
 
   /* ---------- data step: deal/template mapping cards ---------- */
@@ -455,6 +428,8 @@
   }
   .quality-slider input[type=range]{ flex:1; accent-color:var(--ink); }
   .quality-empty{ font-size:12.5px; color:var(--muted); text-align:center; padding:30px 10px; }
+  .quality-fill-row{ display:flex; align-items:center; gap:10px; margin:-4px 0 18px; font-size:12px; color:var(--muted); }
+  .quality-fill-row .cp-swatch{ width:24px; height:24px; }
 
   /* ---------- brand logo mark ---------- */
   .brand svg{ display:block; }
@@ -468,25 +443,25 @@
   .splash-screen h1{ font-size:34px; font-weight:800; margin:0; letter-spacing:-0.02em; }
   .splash-screen .splash-hint{ font-size:12px; color:var(--muted); position:absolute; bottom:28px; }
 
-  /* ---------- page toolbar (Layout / Data / Final) ---------- */
-  .page-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
-  .toggle2{ display:flex; border:1px solid var(--line-strong); border-radius:100px; padding:3px; background:#fff; }
-  .toggle2 button{
-    font-size:12.5px; font-weight:700; padding:8px 18px; border-radius:100px; background:none; border:none; color:var(--muted);
-  }
-  .toggle2 button.active{ background:var(--ink); color:#fff; }
-  .pt-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  /* ---------- bottom toolbar (Layout / Data / Final) ---------- */
+  .bottom-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:24px; flex-wrap:wrap; }
+  .bt-left{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .bt-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .icon-btn.muted{ background:#ccc; color:#fff; border-color:#ccc; }
+  .icon-btn.muted:hover{ background:#bbb; }
 
   /* ---------- accordion (layer settings) ---------- */
-  .accordion{ display:flex; flex-direction:column; gap:6px; margin:14px 0; }
-  .acc-item{ border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .accordion{ display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+  .acc-item{ border:1px solid #E6E6E6; border-radius:9.5px; overflow:hidden; }
   .acc-head{
-    width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:10px 12px; background:var(--surface-raised); border:none; font-size:12.5px; font-weight:700; color:var(--ink);
+    width:100%; display:flex; align-items:center; gap:10px;
+    padding:12px 14px; background:#F6F6F6; border:none; font-size:13px; font-weight:700; color:var(--ink);
   }
-  .acc-head .acc-chevron{ transition:transform .12s; }
+  .acc-head .acc-eye{ width:16px; height:16px; flex-shrink:0; }
+  .acc-head .acc-label{ flex:1; text-align:left; }
+  .acc-head .acc-chevron{ transition:transform .12s; flex-shrink:0; }
   .acc-item.open .acc-head .acc-chevron{ transform:rotate(180deg); }
-  .acc-body{ display:none; padding:14px 12px; border-top:1px solid var(--line); }
+  .acc-body{ display:none; padding:14px 12px; border-top:1px solid #E6E6E6; }
   .acc-item.open .acc-body{ display:block; }
 
   /* ---------- rich color picker ---------- */
@@ -521,26 +496,6 @@
       </svg>
       <h1>WE Adapt</h1>
     </div>
-  </div>
-
-  <div class="page-toolbar" id="pageToolbar" style="display:none;">
-    <div class="toggle2" id="layoutDataToggle">
-      <button data-page="layout" class="active">Layout</button>
-      <button data-page="data">Data</button>
-    </div>
-    <div class="pt-right">
-      <button class="btn secondary small" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
-      <button class="icon-btn" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
-      </button>
-      <button class="btn secondary small" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import</button>
-      <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
-      <button class="icon-btn" id="btnPageTrash" title="Delete">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M5 4l.6 9.5a1 1 0 0 0 1 .9h2.8a1 1 0 0 0 1-.9L11 4"/></svg>
-      </button>
-      <button class="btn" id="btnNextPage">Next →</button>
-    </div>
-    <span class="save-status" id="saveStatus"></span>
   </div>
 
   <div class="resume-banner" id="resumeBanner" style="display:none;">
@@ -603,48 +558,21 @@
         </div>
       </div>
       <div>
-        <div class="toolbar" style="margin-bottom:14px; justify-content:flex-end;">
-          <div class="icon-toolbar">
-            <button class="icon-btn" id="btnDownloadTemplateIcon" title="Download template background">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
-            </button>
-          </div>
-          <div class="layer-tabs" id="layerTabs">
-            <button class="layer-tab active" data-tab="text"><span class="tab-swatch" style="background:var(--accent)"></span>Text <span class="tab-count" id="countText">0</span></button>
-            <button class="layer-tab" data-tab="image"><span class="tab-swatch" style="background:#4a6fa5"></span>Images <span class="tab-count" id="countImage">0</span></button>
-            <button class="layer-tab" data-tab="logo"><span class="tab-swatch" style="background:#9a7b3f"></span>Logo <span class="tab-count" id="countLogo">0</span></button>
+        <div class="card wl-name-card">
+          <div class="wl-row wl-name-row">
+            <svg class="wl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><circle cx="5.5" cy="5.5" r="1"/><path d="M14 10l-3.5-3.5-5 5"/></svg>
+            <span class="wl-label" id="wlTemplateName">Template Name</span>
           </div>
         </div>
+
         <div class="card">
-          <h2>Layers <span class="badge-count" id="layerCount">0</span></h2>
-          <p class="hint">Each box becomes a field your spreadsheet fills in. Grouped by type above.</p>
-          <div class="layer-list" id="layerList"></div>
-          <div class="empty-note" id="layerEmptyNote">Draw a box on the template, tagged as this type, to add a layer here.</div>
-        </div>
-
-        <div class="undo-redo" id="layoutUndoRedo" title="Undo / Redo" style="margin:2px 0 14px;">
-          <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
-          </button>
-          <button id="btnRedo" disabled title="Redo (Ctrl+Y)">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
-          </button>
-        </div>
-
-        <div class="card" id="fontManagerCard">
-          <h2>Template fonts</h2>
-          <p class="hint">Upload the .ttf/.otf files used in this PSD so text renders in the real typeface.</p>
-          <div class="font-list" id="fontList"></div>
-          <div class="font-upload-row">
-            <input type="text" id="fontFriendlyName" placeholder="Name this font, e.g. Brand Bold">
-            <button class="btn secondary small" id="btnUploadFont">Upload file</button>
+          <div class="wl-row wl-row-dark static">
+            <svg class="wl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg>
+            <span class="wl-label">Layers</span>
+            <span class="badge-count" id="layerCount">0</span>
           </div>
-          <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
-          <div class="font-status" id="fontStatus"></div>
-        </div>
 
-        <div class="card" id="layerDetailCard" style="display:none;">
-          <h2>Layer settings</h2>
+          <div id="layerDetailCard" style="display:none; margin-top:10px;">
           <label class="field">
             <span class="lbl">Field name</span>
             <input type="text" id="layerName" placeholder="e.g. headline">
@@ -660,7 +588,7 @@
 
           <div class="accordion" id="layerAccordion">
             <div class="acc-item" data-acc="typography" id="accTypography">
-              <button type="button" class="acc-head" data-acc-toggle="typography">Typography <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <button type="button" class="acc-head" data-acc-toggle="typography"><svg class="acc-eye" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg><span class="acc-label">Typography</span><svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
               <div class="acc-body" id="textOptions">
                 <div class="row2">
                   <label class="field">
@@ -730,7 +658,7 @@
             </div>
 
             <div class="acc-item" data-acc="image" id="accImage">
-              <button type="button" class="acc-head" data-acc-toggle="image">Image <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <button type="button" class="acc-head" data-acc-toggle="image"><svg class="acc-eye" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg><span class="acc-label">Image</span><svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
               <div class="acc-body" id="imageOptions">
                 <label class="field">
                   <span class="lbl">Fit</span>
@@ -739,16 +667,7 @@
                     <option value="contain">Contain (fit inside box)</option>
                   </select>
                 </label>
-                <div class="toggle-row">
-                  <div class="tr-text">
-                    <span class="tr-label">Remove background</span>
-                    <span class="tr-sub">Cuts out this box's flat background color when generating</span>
-                  </div>
-                  <label class="switch">
-                    <input type="checkbox" id="layerRemoveBgToggle">
-                    <span class="slider"></span>
-                  </label>
-                </div>
+                <p class="hint" style="margin-top:-4px;">"Remove background" for this layer is set on the Data page, next to the column mapping table.</p>
                 <div class="toggle-row" id="layerAutoAdaptRow">
                   <div class="tr-text">
                     <span class="tr-label">Adapt per row</span>
@@ -768,7 +687,7 @@
             </div>
 
             <div class="acc-item" data-acc="fill" id="accFill">
-              <button type="button" class="acc-head" data-acc-toggle="fill">Fill <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <button type="button" class="acc-head" data-acc-toggle="fill"><svg class="acc-eye" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg><span class="acc-label">Fill</span><svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
               <div class="acc-body">
                 <label class="field" id="layerStaticTextField" style="display:none;">
                   <span class="lbl">Fixed text</span>
@@ -789,7 +708,7 @@
             </div>
 
             <div class="acc-item" data-acc="effects" id="accEffects">
-              <button type="button" class="acc-head" data-acc-toggle="effects">Effects <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <button type="button" class="acc-head" data-acc-toggle="effects"><svg class="acc-eye" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg><span class="acc-label">Effects</span><svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
               <div class="acc-body">
                 <label class="field">
                   <span class="lbl">Opacity (%)</span>
@@ -828,6 +747,31 @@
           </div>
 
           <button class="btn danger full" id="btnDeleteLayer">Delete this layer</button>
+          </div>
+
+          <div class="layer-list" id="layerList"></div>
+          <div class="empty-note" id="layerEmptyNote">Draw a box on the template to add a layer here.</div>
+        </div>
+
+        <div class="card" id="fontManagerCard">
+          <h2>Template fonts</h2>
+          <p class="hint">Upload the .ttf/.otf files used in this PSD so text renders in the real typeface.</p>
+          <div class="font-list" id="fontList"></div>
+          <div class="font-upload-row">
+            <input type="text" id="fontFriendlyName" placeholder="Name this font, e.g. Brand Bold">
+            <button class="btn secondary small" id="btnUploadFont">Upload file</button>
+          </div>
+          <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+          <div class="font-status" id="fontStatus"></div>
+        </div>
+
+        <div class="undo-redo" id="layoutUndoRedo" title="Undo / Redo">
+          <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+          </button>
+          <button id="btnRedo" disabled title="Redo (Ctrl+Y)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -963,7 +907,7 @@
       <h2>Map columns to layers</h2>
       <p class="hint">Pick the column letter that holds each layer's content for every row. We show a preview of row 1's value next to each option to help you confirm.</p>
       <table class="maptable">
-        <thead><tr><th>Layer</th><th>Spreadsheet column</th></tr></thead>
+        <thead><tr><th>Layer</th><th>Spreadsheet column</th><th>Remove BG</th></tr></thead>
         <tbody id="mapTableBody"></tbody>
       </table>
 
@@ -979,15 +923,6 @@
   </section>
 
   <section class="panel" id="panel-final">
-    <div class="undo-redo" id="finalUndoRedo" title="Undo / Redo" style="margin-bottom:14px;">
-      <button id="btnUndo2" disabled title="Undo (Ctrl+Z)">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
-      </button>
-      <button id="btnRedo2" disabled title="Redo (Ctrl+Y)">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
-      </button>
-      <button class="btn" id="btnDownloadZip" disabled>Export All</button>
-    </div>
     <div class="card">
       <div class="toolbar">
         <div class="left">
@@ -1002,7 +937,7 @@
           <button class="btn secondary" id="btnRenameAllToggle">✎ Rename all</button>
         </div>
       </div>
-      <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Click any export below to fix its text before downloading, or use the Quality Check panel to fine-tune it.</p>
+      <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Scroll the strip below to review each creative, edit its text/images inline, and fine-tune it with the Quality Check panel.</p>
       <div class="rename-all-bar" id="renameAllBar" style="display:none;">
         <span class="rl">Prefix</span>
         <input type="text" id="renamePrefix" placeholder="e.g. banner">
@@ -1018,17 +953,43 @@
         <div class="progress-text" id="progressText">0 / 0</div>
       </div>
       <div class="image-fail-banner" id="imageFailBanner" style="display:none;"></div>
-      <div class="grid2">
-        <div class="output-grid" id="outputGrid"></div>
+
+      <div class="quality-empty" id="qualityEmpty">Click "Generate" to create your adaptations — they'll appear here for review.</div>
+
+      <div class="final-layout" id="finalLayout" style="display:none;">
+        <div>
+          <div class="final-preview-frame">
+            <img id="mainPreviewImg" alt="Preview">
+          </div>
+          <div class="output-strip" id="outputStrip"></div>
+          <div class="final-current-bar">
+            <input type="text" id="finalNameInput" title="Rename this file">
+            <span style="color:var(--muted); font-size:12px;" id="finalExtLabel">.png</span>
+            <select id="finalFmtSelect" style="width:auto;">
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+            </select>
+            <a class="btn secondary small" id="finalDownloadLink" download>Download</a>
+          </div>
+          <div class="final-edit-fields" id="finalEditFields"></div>
+        </div>
+
         <div class="card quality-panel" id="qualityPanel">
           <h2>Quality Check</h2>
           <div class="quality-preview" id="qualityPreview">
-            <div class="quality-empty" id="qualityEmpty">Generate your adaptations, then click one to review it here.</div>
-            <img id="qualityPreviewImg" style="display:none;" alt="Preview">
+            <img id="qualityPreviewImg" alt="Preview">
           </div>
           <div class="quality-nav">
             <button id="qualityPrev">← </button>
             <button id="qualityNext">→</button>
+          </div>
+          <div class="row2" style="margin-bottom:14px;">
+            <label class="field" style="margin-bottom:0;"><span class="lbl">Row NO</span><input type="number" id="qualityRowNo" min="1" value="1"></label>
+            <label class="field" style="margin-bottom:0;"><span class="lbl">Column NO</span><input type="text" id="qualityColNo" placeholder="e.g. C"></label>
+          </div>
+          <div class="quality-fill-row">
+            <div class="cp-swatch" id="qualityFillSwatch"></div>
+            <span id="qualityFillLabel">Pick a column to inspect a layer</span>
           </div>
           <div class="quality-slider">
             <div class="qs-label">Zoom in / Zoom out</div>
@@ -1059,9 +1020,16 @@
               <button data-adjust="saturation" data-dir="1">+</button>
             </div>
           </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn secondary full" id="qualityEditContent">Edit text &amp; images</button>
-            <button class="btn secondary full" id="qualityReset">Reset</button>
+          <button class="btn secondary full" id="qualityReset" style="margin-bottom:16px;">Reset adjustments</button>
+
+          <div class="undo-redo" id="finalUndoRedo" title="Undo / Redo" style="justify-content:flex-start;">
+            <button id="btnUndo2" disabled title="Undo (Ctrl+Z)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+            </button>
+            <button id="btnRedo2" disabled title="Redo (Ctrl+Y)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+            </button>
+            <button class="btn" id="btnDownloadZip" disabled>Export All</button>
           </div>
         </div>
       </div>
@@ -1069,27 +1037,23 @@
 
   </section>
 
-  <div class="modal-overlay" id="editModalOverlay">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2 id="editModalTitle">Edit export</h2>
-        <button class="btn secondary small" id="btnCloseEditModal">Close</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-preview">
-          <img id="editModalPreview" alt="Preview">
-        </div>
-        <div class="modal-fields" id="editModalFields"></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn secondary" id="btnResetOverride">Reset to spreadsheet text</button>
-        <div style="flex:1;"></div>
-        <select id="editModalFormat" style="width:auto;">
-          <option value="png">PNG</option>
-          <option value="jpg">JPG</option>
-        </select>
-        <button class="btn" id="btnApplyAndDownload">Apply & download</button>
-      </div>
+  <div class="bottom-toolbar" id="pageToolbar" style="display:none;">
+    <div class="bt-left">
+      <button class="step-pill" data-page="layout">Layout</button>
+      <button class="step-pill" data-page="data">Data</button>
+      <button class="btn secondary" id="btnSaveProject" title="Save your progress in this browser">Save</button>
+      <button class="btn secondary" id="btnImportProject" title="Load a project file you saved earlier">Import</button>
+      <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
+      <span class="save-status" id="saveStatus"></span>
+    </div>
+    <div class="bt-right">
+      <button class="icon-btn muted" id="btnPageTrash" title="Delete">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M5 4l.6 9.5a1 1 0 0 0 1 .9h2.8a1 1 0 0 0 1-.9L11 4"/></svg>
+      </button>
+      <button class="icon-btn muted" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
+      </button>
+      <button class="btn" id="btnNextPage">Generate</button>
     </div>
   </div>
 
@@ -1110,7 +1074,6 @@
     displayScale: 1,            // editor display px -> natural px factor (natural = display / scale)
     layers: [],                 // {id,name,type,x,y,w,h, ...style}
     selectedLayerId: null,
-    activeTab: 'text',          // which layer-type tab is showing in the sidebar
     customFonts: [],            // {id, name, family, fileName}
     sheetRows: [],              // array of objects keyed by header
     sheetHeaders: [],           // legacy, unused now (kept for safety, see columnLabels)
@@ -1434,14 +1397,16 @@
     const hasTemplate = !!state.templateImg;
     document.getElementById('layoutUpload').style.display = hasTemplate ? 'none' : 'block';
     document.getElementById('layoutEditor').style.display = hasTemplate ? 'block' : 'none';
+    document.getElementById('wlTemplateName').textContent = state.templateName || 'Template Name';
   }
 
   function updateNextButton(){
     const btn = document.getElementById('btnNextPage');
+    btn.textContent = 'Generate';
     if(currentPage==='layout'){
-      btn.style.display=''; btn.textContent = 'Next →'; btn.disabled = !state.layers.length;
+      btn.style.display=''; btn.disabled = !state.layers.length;
     } else if(currentPage==='data'){
-      btn.style.display=''; btn.textContent = 'Next →'; btn.disabled = !state.sheetRows.length;
+      btn.style.display=''; btn.disabled = !state.sheetRows.length;
     } else {
       btn.style.display = 'none';
     }
@@ -1451,7 +1416,7 @@
     currentPage = name;
     Object.keys(pages).forEach(k=>pages[k].classList.toggle('active', k===name));
     document.getElementById('pageToolbar').style.display = name==='splash' ? 'none' : 'flex';
-    document.querySelectorAll('#layoutDataToggle button').forEach(b=>{
+    document.querySelectorAll('.bt-left .step-pill[data-page]').forEach(b=>{
       b.classList.toggle('active', b.dataset.page===name);
     });
     updateNextButton();
@@ -1469,7 +1434,7 @@
   setTimeout(leaveSplash, 6000);
   splashScreen.addEventListener('click', leaveSplash);
 
-  document.querySelectorAll('#layoutDataToggle button').forEach(b=>{
+  document.querySelectorAll('.bt-left .step-pill[data-page]').forEach(b=>{
     b.addEventListener('click', ()=> goToPage(b.dataset.page) );
   });
   document.getElementById('btnNextPage').addEventListener('click', ()=>{
@@ -1484,11 +1449,11 @@
     else if(currentPage==='data') clearLoadedSheet();
     else if(currentPage==='final'){
       state.generated = [];
-      document.getElementById('outputGrid').innerHTML = '';
-      document.getElementById('btnDownloadZip').disabled = true;
       qualitySelectedId = null;
-      qEmpty.style.display = 'block';
-      qImg.style.display = 'none';
+      renderOutputStrip();
+      document.getElementById('btnDownloadZip').disabled = true;
+      document.getElementById('qualityEmpty').style.display = 'block';
+      document.getElementById('finalLayout').style.display = 'none';
     }
   });
 
@@ -1622,7 +1587,7 @@
     state.templates.forEach(t=>{
       const chip = document.createElement('div');
       chip.className = 'template-chip'+(t.id===state.activeTemplateId?' active':'');
-      chip.innerHTML = `<span class="tc-thumb">${t.dataUrl?`<img src="${t.dataUrl}" alt="">`:'🖼'}</span><span>${escapeHtml(t.name||'template')}</span>${state.templates.length>1?'<button class="tc-del" title="Remove template">×</button>':''}`;
+      chip.innerHTML = `<span>${escapeHtml(t.name||'template')}</span>${state.templates.length>1?'<button class="tc-del" title="Remove template">×</button>':''}`;
       const delBtn = chip.querySelector('.tc-del');
       if(delBtn) delBtn.addEventListener('click', e=>{ e.stopPropagation(); removeTemplateSlot(t.id); });
       chip.addEventListener('click', ()=> switchToTemplate(t.id) );
@@ -1630,7 +1595,8 @@
     });
     const addChip = document.createElement('div');
     addChip.className = 'template-chip add';
-    addChip.innerHTML = '<span class="tc-thumb">＋</span><span>New template</span>';
+    addChip.textContent = '+';
+    addChip.title = 'Add new template';
     addChip.addEventListener('click', addNewTemplateSlot);
     strip.appendChild(addChip);
   }
@@ -1845,9 +1811,11 @@
 
   function countOfType(type){ return state.layers.filter(l=>l.type===type).length; }
 
+  const layerEyeIcon = '<svg class="wl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"/><circle cx="8" cy="8" r="2"/></svg>';
+
   function addLayer(box){
     const id = 'L'+(layerSeq++);
-    const type = state.activeTab;
+    const type = 'text';
     const prefix = typeDefaultNamePrefix[type] || 'field';
     const layer = {
       id, name: prefix+'_'+(countOfType(type)+1), type,
@@ -1868,45 +1836,19 @@
 
   function selectLayer(id){
     state.selectedLayerId = id;
-    const layer = state.layers.find(l=>l.id===id);
-    if(layer && layer.type !== state.activeTab){
-      state.activeTab = layer.type;
-    }
     renderEditor();
   }
-
-  function setActiveTab(tab){
-    state.activeTab = tab;
-    renderLayerList();
-    renderEditor();
-  }
-
-  document.querySelectorAll('.layer-tab').forEach(btn=>{
-    btn.addEventListener('click', ()=> setActiveTab(btn.dataset.tab) );
-  });
 
   function renderLayerList(){
     const list = document.getElementById('layerList');
     const emptyNote = document.getElementById('layerEmptyNote');
     document.getElementById('layerCount').textContent = state.layers.length;
-    document.getElementById('countText').textContent = countOfType('text');
-    document.getElementById('countImage').textContent = countOfType('image');
-    document.getElementById('countLogo').textContent = countOfType('logo');
-    document.querySelectorAll('.layer-tab').forEach(btn=>{
-      btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
-    });
     list.innerHTML='';
-    const visible = state.layers.filter(l=>l.type===state.activeTab);
-    emptyNote.style.display = visible.length? 'none':'block';
-    emptyNote.textContent = state.activeTab==='text'
-      ? 'Draw a box on the template to add a text/copy field.'
-      : state.activeTab==='image'
-      ? 'Draw a box on the template to add an image field.'
-      : 'Draw a box on the template to add a logo field.';
-    visible.forEach(layer=>{
+    emptyNote.style.display = state.layers.length ? 'none':'block';
+    state.layers.forEach(layer=>{
       const item = document.createElement('div');
-      item.className = 'layer-item'+(layer.id===state.selectedLayerId?' selected':'');
-      item.innerHTML = `<span class="swatch ${layer.type}"></span><span class="lname">${escapeHtml(layer.name||'untitled')}</span><button class="ldel" title="Delete">×</button>`;
+      item.className = 'wl-row wl-row-dark layer-item'+(layer.id===state.selectedLayerId?' selected':'');
+      item.innerHTML = `${layerEyeIcon}<span class="wl-label">${escapeHtml(layer.name||'untitled')}</span><button class="ldel" title="Delete">×</button>`;
       item.addEventListener('click', e=>{
         if(e.target.classList.contains('ldel')){
           state.layers = state.layers.filter(l=>l.id!==layer.id);
@@ -1977,7 +1919,6 @@
     document.getElementById('accTypography').style.display = layer.type==='text' ? '' : 'none';
     document.getElementById('accImage').style.display = layer.type!=='text' ? '' : 'none';
 
-    document.getElementById('layerRemoveBgToggle').checked = !!layer.removeBackground;
     document.getElementById('layerAutoAdaptToggle').checked = layer.autoAdapt !== false;
     const isStatic = layer.autoAdapt === false;
     document.getElementById('layerStaticTextField').style.display = (isStatic && layer.type==='text') ? 'block' : 'none';
@@ -2024,7 +1965,6 @@
   elName.addEventListener('input', e=>updateSelectedLayer('name', e.target.value));
   elType.addEventListener('change', e=>{
     updateSelectedLayer('type', e.target.value);
-    state.activeTab = e.target.value;
     renderLayerList();
   });
   elFontSize.addEventListener('input', e=>{
@@ -2055,10 +1995,7 @@
     });
   });
 
-  /* ----- per-layer: remove background, auto-adapt / static content ----- */
-  document.getElementById('layerRemoveBgToggle').addEventListener('change', e=>{
-    updateSelectedLayer('removeBackground', e.target.checked);
-  });
+  /* ----- per-layer: auto-adapt / static content ----- */
   document.getElementById('layerAutoAdaptToggle').addEventListener('change', e=>{
     updateSelectedLayer('autoAdapt', e.target.checked);
     renderLayerDetail();
@@ -2278,15 +2215,6 @@
     pushHistory();
   }
   document.getElementById('btnDeleteLayer').addEventListener('click', deleteSelectedLayer);
-  document.getElementById('btnDownloadTemplateIcon').addEventListener('click', ()=>{
-    if(!state.templateDataUrl) return;
-    const a = document.createElement('a');
-    a.href = state.templateDataUrl;
-    a.download = safeFileName(state.templateName || 'template') + '.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  });
 
   const fontFileInput = document.getElementById('fontFileInput');
   const fontFriendlyName = document.getElementById('fontFriendlyName');
@@ -2462,8 +2390,11 @@
     sheetUrlStatus.classList.remove('err');
     sourceBadge.style.display = 'none';
     sourcePickers.style.display = 'block';
-    const grid = document.getElementById('outputGrid');
-    if(grid) grid.innerHTML = '';
+    qualitySelectedId = null;
+    const strip = document.getElementById('outputStrip');
+    if(strip) strip.innerHTML = '';
+    document.getElementById('qualityEmpty').style.display = 'block';
+    document.getElementById('finalLayout').style.display = 'none';
     const progressWrap = document.getElementById('progressWrap');
     if(progressWrap) progressWrap.style.display = 'none';
     document.getElementById('btnDownloadZip').disabled = true;
@@ -2642,6 +2573,21 @@
       sel.addEventListener('change', ()=>{ state.columnMap[layer.id] = sel.value===''? '': Number(sel.value); });
       tdSelect.appendChild(sel);
       tr.appendChild(tdLabel); tr.appendChild(tdSelect);
+
+      const tdBg = document.createElement('td');
+      if(layer.type==='image' || layer.type==='logo'){
+        const label = document.createElement('label');
+        label.className = 'switch';
+        label.innerHTML = `<input type="checkbox" ${layer.removeBackground?'checked':''}><span class="slider"></span>`;
+        label.querySelector('input').addEventListener('change', e=>{
+          layer.removeBackground = e.target.checked;
+          renderEditor();
+        });
+        tdBg.appendChild(label);
+      } else {
+        tdBg.innerHTML = '<span style="color:var(--muted);">—</span>';
+      }
+      tr.appendChild(tdBg);
       tbody.appendChild(tr);
     });
     const fnSel = document.getElementById('filenameColumn');
@@ -2979,12 +2925,10 @@
   }
 
   async function generateAll(){
-    const grid = document.getElementById('outputGrid');
-    grid.innerHTML='';
     state.generated = [];
     qualitySelectedId = null;
-    qEmpty.style.display = 'block';
-    qImg.style.display = 'none';
+    document.getElementById('qualityEmpty').style.display = 'block';
+    document.getElementById('finalLayout').style.display = 'none';
     imageLoadFailures = [];
     document.getElementById('imageFailBanner').style.display = 'none';
     const progressWrap = document.getElementById('progressWrap');
@@ -3019,8 +2963,6 @@
       entry.usedBgRemoval = tpl.layers.some(l=>isBgRemovalActiveForLayer(l));
       state.generated.push(entry);
 
-      grid.appendChild(buildOutputItemEl(entry));
-
       fill.style.width = (((i+1)/total)*100)+'%';
       if(!usesBgRemoval) text.textContent = `${i+1} / ${total}`;
       await new Promise(r=>setTimeout(r,0));
@@ -3043,147 +2985,40 @@
       isn't shared as "Anyone with the link can view," or the link doesn't point to an actual file.
       <ul>${unique.map(f=>`<li>${escapeHtml(f.url)}</li>`).join('')}</ul>
       ${moreCount>0 ? `<div class="ifb-tip">+ ${moreCount} more</div>` : ''}
-      <div class="ifb-tip">Fix sharing on these files in Google Drive, then click "Generate / refresh all" again.</div>
+      <div class="ifb-tip">Fix sharing on these files in Google Drive, then click "Generate" again.</div>
     `;
     banner.style.display = 'block';
   }
 
   function extFor(format){ return format==='jpg' ? 'jpg' : 'png'; }
 
-  function buildOutputItemEl(entry){
-    const isEdited = Object.keys(entry.overrides).length > 0;
-    const item = document.createElement('div');
-    item.className='output-item';
-    item.dataset.id = entry.id;
-    const fname = `${entry.baseName}.${extFor(entry.format)}`;
-    item.innerHTML = `
-      ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
-      <div class="oi-thumb">${entry.usedBgRemoval ? '<span class="bgr-pill">BG removed</span>' : ''}<img src="${entry.url}" alt="${escapeHtml(fname)}"></div>
-      <div class="oi-foot">
-        <div class="oi-name-wrap">
-          <input class="oi-name-input" type="text" value="${escapeHtml(entry.baseName)}" title="Rename this file">
-          <span class="oi-ext">.${extFor(entry.format)}</span>
-        </div>
-        <div class="oi-actions">
-          <select class="oi-fmt">
-            <option value="png" ${entry.format==='png'?'selected':''}>PNG</option>
-            <option value="jpg" ${entry.format==='jpg'?'selected':''}>JPG</option>
-          </select>
-          <a href="${entry.url}" download="${escapeHtml(fname)}" title="Download">↓</a>
-        </div>
-      </div>`;
-    item.querySelector('.oi-thumb').addEventListener('click', ()=> selectQualityEntry(entry.id) );
-    item.querySelector('.oi-fmt').addEventListener('change', async (e)=>{
-      await switchItemFormat(entry.id, e.target.value);
+  function renderOutputStrip(){
+    const strip = document.getElementById('outputStrip');
+    strip.innerHTML = '';
+    state.generated.forEach(entry=>{
+      const thumb = document.createElement('div');
+      thumb.className = 'output-thumb'+(entry.id===qualitySelectedId ? ' active' : '');
+      const isEdited = Object.keys(entry.overrides).length > 0;
+      thumb.innerHTML = `${isEdited ? '<span class="ot-badge">E</span>' : ''}<img src="${entry.url}" alt="${escapeHtml(entry.baseName)}">`;
+      thumb.addEventListener('click', ()=>selectQualityEntry(entry.id));
+      strip.appendChild(thumb);
     });
-    const nameInput = item.querySelector('.oi-name-input');
-    nameInput.addEventListener('click', e=> e.stopPropagation());
-    nameInput.addEventListener('change', ()=>{
-      const cleaned = safeFileName(nameInput.value) || entry.baseName;
-      entry.baseName = cleaned;
-      refreshOutputItemEl(entry);
-    });
-    nameInput.addEventListener('keydown', e=>{
-      if(e.key==='Enter') nameInput.blur();
-    });
-    return item;
   }
 
-  function refreshOutputItemEl(entry){
-    const old = document.querySelector(`.output-item[data-id="${entry.id}"]`);
-    if(old) old.replaceWith(buildOutputItemEl(entry));
-  }
-
-  async function switchItemFormat(id, format){
-    const entry = state.generated.find(g=>g.id===id);
-    if(!entry) return;
-    entry.format = format;
+  // Re-renders one entry's export after any edit (text, image reposition, quality adjust, format switch)
+  // and refreshes whichever on-screen previews are currently showing it.
+  async function rerenderEntry(entry){
     const row = state.sheetRows[entry.rowIndex];
     const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
     URL.revokeObjectURL(entry.url);
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
-    refreshOutputItemEl(entry);
-    if(qualitySelectedId===entry.id) qImg.src = entry.url;
+    if(qualitySelectedId === entry.id){
+      document.getElementById('mainPreviewImg').src = entry.url;
+      updateQualityColumnPreview(entry);
+    }
+    renderOutputStrip();
   }
-
-  /* ----- Quality Check panel: zoom / brightness / contrast / saturation, prev/next ----- */
-  let qualitySelectedId = null;
-  const qEmpty = document.getElementById('qualityEmpty');
-  const qImg = document.getElementById('qualityPreviewImg');
-  const qZoom = document.getElementById('qualityZoom');
-  const qBrightness = document.getElementById('qualityBrightness');
-  const qContrast = document.getElementById('qualityContrast');
-  const qSaturation = document.getElementById('qualitySaturation');
-
-  function selectQualityEntry(id){
-    const entry = state.generated.find(g=>g.id===id);
-    if(!entry) return;
-    qualitySelectedId = id;
-    const a = entry.overrides.__adjust || {brightness:0, contrast:0, saturation:0};
-    qEmpty.style.display = 'none';
-    qImg.style.display = 'block';
-    qImg.src = entry.url;
-    qImg.style.transform = 'scale(1)';
-    qZoom.value = 1;
-    qBrightness.value = a.brightness;
-    qContrast.value = a.contrast;
-    qSaturation.value = a.saturation;
-  }
-
-  function qualityStep(dir){
-    if(!qualitySelectedId && state.generated.length){ selectQualityEntry(state.generated[0].id); return; }
-    if(!state.generated.length) return;
-    let idx = state.generated.findIndex(g=>g.id===qualitySelectedId);
-    idx = (idx + dir + state.generated.length) % state.generated.length;
-    selectQualityEntry(state.generated[idx].id);
-  }
-  document.getElementById('qualityPrev').addEventListener('click', ()=>qualityStep(-1));
-  document.getElementById('qualityNext').addEventListener('click', ()=>qualityStep(1));
-
-  qZoom.addEventListener('input', ()=>{ qImg.style.transform = `scale(${qZoom.value})`; });
-
-  async function applyQualityAdjust(){
-    const entry = state.generated.find(g=>g.id===qualitySelectedId);
-    if(!entry) return;
-    const adjust = {
-      brightness: Number(qBrightness.value),
-      contrast: Number(qContrast.value),
-      saturation: Number(qSaturation.value)
-    };
-    if(adjust.brightness || adjust.contrast || adjust.saturation) entry.overrides.__adjust = adjust;
-    else delete entry.overrides.__adjust;
-    const row = state.sheetRows[entry.rowIndex];
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
-    URL.revokeObjectURL(entry.url);
-    entry.blob = blob;
-    entry.url = URL.createObjectURL(blob);
-    qImg.src = entry.url;
-    refreshOutputItemEl(entry);
-  }
-  [qBrightness, qContrast, qSaturation].forEach(input=>{
-    input.addEventListener('change', applyQualityAdjust);
-  });
-  document.querySelectorAll('[data-adjust]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = btn.dataset.adjust;
-      const dir = Number(btn.dataset.dir);
-      const input = key==='zoom' ? qZoom : key==='brightness' ? qBrightness : key==='contrast' ? qContrast : qSaturation;
-      const step = key==='zoom' ? 0.1 : 5;
-      const v = Math.max(Number(input.min), Math.min(Number(input.max), Number(input.value) + dir*step));
-      input.value = v;
-      input.dispatchEvent(new Event(key==='zoom' ? 'input' : 'change'));
-    });
-  });
-  document.getElementById('qualityReset').addEventListener('click', async ()=>{
-    if(!qualitySelectedId) return;
-    qZoom.value = 1; qImg.style.transform = 'scale(1)';
-    qBrightness.value = 0; qContrast.value = 0; qSaturation.value = 0;
-    await applyQualityAdjust();
-  });
-  document.getElementById('qualityEditContent').addEventListener('click', ()=>{
-    if(qualitySelectedId) openEditModal(qualitySelectedId);
-  });
 
   document.getElementById('btnRegenerate').addEventListener('click', generateAll);
 
@@ -3202,10 +3037,7 @@
     a.remove();
   });
 
-  document.getElementById('exportFormatSelect').addEventListener('change', ()=>{
-  });
-
-  /* ----- Rename exports: individually (inline input above) and all together ----- */
+  /* ----- Rename exports: individually (current-item bar) and all together ----- */
   const renameAllBar = document.getElementById('renameAllBar');
   document.getElementById('btnRenameAllToggle').addEventListener('click', ()=>{
     renameAllBar.style.display = (renameAllBar.style.display==='none' || !renameAllBar.style.display) ? 'flex' : 'none';
@@ -3220,24 +3052,24 @@
       const num = String(start + i).padStart(3, '0');
       const parts = [prefix, num, suffix].filter(Boolean);
       entry.baseName = safeFileName(parts.join('_'));
-      refreshOutputItemEl(entry);
     });
+    renderOutputStrip();
+    const cur = state.generated.find(g=>g.id===qualitySelectedId);
+    if(cur) document.getElementById('finalNameInput').value = cur.baseName;
   });
   document.getElementById('btnRenameReset').addEventListener('click', ()=>{
     state.generated.forEach(entry=>{
       const row = state.sheetRows[entry.rowIndex];
-      entry.baseName = baseNameFor(row, state.filenameColumn, entry.rowIndex);
-      refreshOutputItemEl(entry);
+      entry.baseName = baseNameFor(row, state.filenameColumn, entry.rowIndex, entry.tpl.name);
     });
+    renderOutputStrip();
+    const cur = state.generated.find(g=>g.id===qualitySelectedId);
+    if(cur) document.getElementById('finalNameInput').value = cur.baseName;
   });
 
-  /* ----- Edit-export modal: per-banner text overrides ----- */
-  const editModalOverlay = document.getElementById('editModalOverlay');
-  const editModalFields = document.getElementById('editModalFields');
-  const editModalPreview = document.getElementById('editModalPreview');
-  const editModalFormat = document.getElementById('editModalFormat');
-  let editingEntryId = null;
+  /* ----- per-row inline edit fields (text overrides + image reposition) ----- */
   let activeRepositionResizeListeners = [];
+  let finalEditDebounce = null;
 
   function imageLayersForMapping(layers){
     return (layers || state.layers).filter(l=>(l.type==='image' || l.type==='logo') && l.autoAdapt!==false);
@@ -3259,7 +3091,7 @@
     stage.className = 'reposition-stage';
     stage.style.aspectRatio = `${layer.w} / ${layer.h}`;
     const img = document.createElement('img');
-    
+
     img.crossOrigin = 'anonymous';
     img.src = url;
     stage.appendChild(img);
@@ -3276,7 +3108,7 @@
     const hint = document.createElement('p');
     hint.className = 'reposition-hint';
     hint.textContent = isBgRemovalActiveForLayer(layer)
-      ? 'Drag the photo to reposition, use the slider to zoom. (Background removal preview shown after Apply.)'
+      ? 'Drag the photo to reposition, use the slider to zoom. (Background removal preview shown after it re-renders.)'
       : 'Drag the photo to reposition, use the slider to zoom.';
 
     wrap.innerHTML = `<span class="mf-label">${escapeHtml(layer.name)}</span>`;
@@ -3325,6 +3157,7 @@
       const newOffsetY = slackY>0 ? clampPx(startOffset.y - dy/(slackY/2), -1, 1) : 0;
       setTransform({offsetX:newOffsetX, offsetY:newOffsetY});
       layout();
+      scheduleFinalRerender(entry);
     });
     ;['pointerup','pointercancel'].forEach(ev=>stage.addEventListener(ev, ()=>{
       dragging = false;
@@ -3335,6 +3168,7 @@
       zoomLabel.textContent = Math.round(parseFloat(zoomSlider.value)*100)+'%';
       setTransform({zoom: parseFloat(zoomSlider.value)});
       layout();
+      scheduleFinalRerender(entry);
     });
 
     function setTransform(partial){
@@ -3348,97 +3182,202 @@
     return wrap;
   }
 
-  function openEditModal(id){
-    const entry = state.generated.find(g=>g.id===id);
-    if(!entry) return;
+  function scheduleFinalRerender(entry){
+    clearTimeout(finalEditDebounce);
+    finalEditDebounce = setTimeout(()=>rerenderEntry(entry), 400);
+  }
+
+  function renderFinalEditFields(entry){
     activeRepositionResizeListeners.forEach(fn=>window.removeEventListener('resize', fn));
     activeRepositionResizeListeners = [];
-    editingEntryId = id;
+    const wrap = document.getElementById('finalEditFields');
+    wrap.innerHTML = '';
     const row = state.sheetRows[entry.rowIndex];
-    document.getElementById('editModalTitle').textContent = `Edit — ${entry.baseName}`;
-    editModalPreview.src = entry.url;
-    editModalFormat.value = entry.format;
-
     const textLayers = textLayersForMapping(entry.tpl.layers);
     const imageLayers = imageLayersForMapping(entry.tpl.layers);
-    editModalFields.innerHTML = '';
-    if(!textLayers.length && !imageLayers.length){
-      editModalFields.innerHTML = '<p class="hint">This template has no editable layers.</p>';
-    }
     textLayers.forEach(layer=>{
       const col = entry.tpl.columnMap[layer.id];
       const original = (col===''||col===undefined||col===null) ? '' : (row[col] ?? '');
       const currentVal = entry.overrides[layer.id] !== undefined ? entry.overrides[layer.id] : original;
-      const wrap = document.createElement('div');
-      wrap.className = 'mf-row';
-      wrap.innerHTML = `
-        <span class="mf-label">${escapeHtml(layer.name)}</span>
-        <span class="mf-tag">Spreadsheet says: "${escapeHtml(String(original).slice(0,60))}"</span>
-        <textarea data-layer-id="${layer.id}" rows="2">${escapeHtml(String(currentVal))}</textarea>`;
-      editModalFields.appendChild(wrap);
+      const box = document.createElement('div');
+      box.className = 'mf-row';
+      box.innerHTML = `<span class="mf-label">${escapeHtml(layer.name)}</span><textarea data-layer-id="${layer.id}" rows="2">${escapeHtml(String(currentVal))}</textarea>`;
+      const ta = box.querySelector('textarea');
+      ta.addEventListener('input', ()=>{
+        if(ta.value !== String(original)) entry.overrides[layer.id] = ta.value;
+        else delete entry.overrides[layer.id];
+        scheduleFinalRerender(entry);
+      });
+      wrap.appendChild(box);
     });
     imageLayers.forEach(layer=>{
-      editModalFields.appendChild(buildImageRepositionField(layer, entry, row, entry.tpl.columnMap));
+      wrap.appendChild(buildImageRepositionField(layer, entry, row, entry.tpl.columnMap));
     });
-    editModalOverlay.classList.add('open');
   }
 
-  function closeEditModal(){
-    editModalOverlay.classList.remove('open');
-    editingEntryId = null;
-    activeRepositionResizeListeners.forEach(fn=>window.removeEventListener('resize', fn));
-    activeRepositionResizeListeners = [];
+  /* ----- Quality Check panel: prev/next, Row NO / Column NO, zoom / brightness / contrast / saturation ----- */
+  let qualitySelectedId = null;
+  const qImg = document.getElementById('qualityPreviewImg');
+  const qZoom = document.getElementById('qualityZoom');
+  const qBrightness = document.getElementById('qualityBrightness');
+  const qContrast = document.getElementById('qualityContrast');
+  const qSaturation = document.getElementById('qualitySaturation');
+
+  function colLetterToIndex(letters){
+    letters = String(letters||'').trim().toUpperCase();
+    if(!letters) return -1;
+    let n = 0;
+    for(let i=0;i<letters.length;i++){
+      const c = letters.charCodeAt(i)-64;
+      if(c<1||c>26) return -1;
+      n = n*26+c;
+    }
+    return n-1;
   }
 
-  document.getElementById('btnCloseEditModal').addEventListener('click', closeEditModal);
-  editModalOverlay.addEventListener('click', e=>{ if(e.target===editModalOverlay) closeEditModal(); });
+  async function updateQualityColumnPreview(entry){
+    const letters = document.getElementById('qualityColNo').value;
+    const colIdx = colLetterToIndex(letters);
+    const swatch = document.getElementById('qualityFillSwatch');
+    const label = document.getElementById('qualityFillLabel');
+    if(colIdx < 0){
+      qImg.src = entry.url;
+      swatch.style.background = 'transparent';
+      label.textContent = 'Pick a column to inspect a layer';
+      return;
+    }
+    const layer = entry.tpl.layers.find(l=>String(entry.tpl.columnMap[l.id])===String(colIdx));
+    if(!layer || layer.type==='text'){
+      qImg.src = entry.url;
+      swatch.style.background = 'transparent';
+      label.textContent = layer ? `${layer.name} is a text layer` : 'No layer mapped to that column';
+      return;
+    }
+    const img = await new Promise(resolve=>{
+      const im = new Image();
+      im.onload = ()=>resolve(im);
+      im.onerror = ()=>resolve(null);
+      im.src = entry.url;
+    });
+    if(!img) return;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(layer.w));
+    c.height = Math.max(1, Math.round(layer.h));
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, layer.x, layer.y, layer.w, layer.h, 0, 0, c.width, c.height);
+    qImg.src = c.toDataURL('image/png');
+    try{
+      const edge = detectBgColorFromEdges(ctx, c.width, c.height);
+      swatch.style.background = `rgb(${edge.r},${edge.g},${edge.b})`;
+      label.textContent = `${layer.name} — detected background rgb(${edge.r}, ${edge.g}, ${edge.b})`;
+    }catch(err){
+      swatch.style.background = 'transparent';
+      label.textContent = layer.name;
+    }
+  }
 
-  document.getElementById('btnResetOverride').addEventListener('click', async ()=>{
-    const entry = state.generated.find(g=>g.id===editingEntryId);
+  function selectQualityEntry(id){
+    const entry = state.generated.find(g=>g.id===id);
     if(!entry) return;
-    const kept = {};
-    Object.keys(entry.overrides).forEach(k=>{
-      if(k.endsWith('__transform') || k==='__adjust') kept[k] = entry.overrides[k];
-    });
-    entry.overrides = kept;
-    const row = state.sheetRows[entry.rowIndex];
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
-    URL.revokeObjectURL(entry.url);
-    entry.blob = blob; entry.url = URL.createObjectURL(blob);
-    refreshOutputItemEl(entry);
-    openEditModal(entry.id);
+    qualitySelectedId = id;
+    const idx = state.generated.findIndex(g=>g.id===id);
+    document.getElementById('qualityEmpty').style.display = 'none';
+    document.getElementById('finalLayout').style.display = 'grid';
+    document.getElementById('mainPreviewImg').src = entry.url;
+    document.getElementById('qualityRowNo').value = idx+1;
+    document.getElementById('finalNameInput').value = entry.baseName;
+    document.getElementById('finalExtLabel').textContent = '.'+extFor(entry.format);
+    document.getElementById('finalFmtSelect').value = entry.format;
+    const dl = document.getElementById('finalDownloadLink');
+    dl.href = entry.url;
+    dl.download = `${entry.baseName}.${extFor(entry.format)}`;
+
+    const a = entry.overrides.__adjust || {brightness:0, contrast:0, saturation:0};
+    qZoom.value = 1;
+    qImg.style.transform = 'scale(1)';
+    qBrightness.value = a.brightness;
+    qContrast.value = a.contrast;
+    qSaturation.value = a.saturation;
+
+    renderOutputStrip();
+    renderFinalEditFields(entry);
+    updateQualityColumnPreview(entry);
+  }
+
+  function qualityStep(dir){
+    if(!qualitySelectedId && state.generated.length){ selectQualityEntry(state.generated[0].id); return; }
+    if(!state.generated.length) return;
+    let idx = state.generated.findIndex(g=>g.id===qualitySelectedId);
+    idx = (idx + dir + state.generated.length) % state.generated.length;
+    selectQualityEntry(state.generated[idx].id);
+  }
+  document.getElementById('qualityPrev').addEventListener('click', ()=>qualityStep(-1));
+  document.getElementById('qualityNext').addEventListener('click', ()=>qualityStep(1));
+
+  document.getElementById('qualityRowNo').addEventListener('change', e=>{
+    if(!state.generated.length) return;
+    let idx = parseInt(e.target.value, 10) - 1;
+    idx = Math.max(0, Math.min(state.generated.length-1, isNaN(idx) ? 0 : idx));
+    selectQualityEntry(state.generated[idx].id);
+  });
+  document.getElementById('qualityColNo').addEventListener('input', ()=>{
+    const entry = state.generated.find(g=>g.id===qualitySelectedId);
+    if(entry) updateQualityColumnPreview(entry);
   });
 
-  document.getElementById('btnApplyAndDownload').addEventListener('click', async ()=>{
-    const entry = state.generated.find(g=>g.id===editingEntryId);
+  qZoom.addEventListener('input', ()=>{ qImg.style.transform = `scale(${qZoom.value})`; });
+
+  async function applyQualityAdjust(){
+    const entry = state.generated.find(g=>g.id===qualitySelectedId);
     if(!entry) return;
-    const row = state.sheetRows[entry.rowIndex];
-    const overrides = {...entry.overrides};
-    editModalFields.querySelectorAll('textarea[data-layer-id]').forEach(ta=>{
-      const layerId = ta.dataset.layerId;
-      const col = entry.tpl.columnMap[layerId];
-      const original = (col===''||col===undefined||col===null) ? '' : String(row[col] ?? '');
-      if(ta.value !== original) overrides[layerId] = ta.value;
-      else delete overrides[layerId];
+    const adjust = {
+      brightness: Number(qBrightness.value),
+      contrast: Number(qContrast.value),
+      saturation: Number(qSaturation.value)
+    };
+    if(adjust.brightness || adjust.contrast || adjust.saturation) entry.overrides.__adjust = adjust;
+    else delete entry.overrides.__adjust;
+    await rerenderEntry(entry);
+  }
+  [qBrightness, qContrast, qSaturation].forEach(input=>{
+    input.addEventListener('change', applyQualityAdjust);
+  });
+  document.querySelectorAll('[data-adjust]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.adjust;
+      const dir = Number(btn.dataset.dir);
+      const input = key==='zoom' ? qZoom : key==='brightness' ? qBrightness : key==='contrast' ? qContrast : qSaturation;
+      const step = key==='zoom' ? 0.1 : 5;
+      const v = Math.max(Number(input.min), Math.min(Number(input.max), Number(input.value) + dir*step));
+      input.value = v;
+      input.dispatchEvent(new Event(key==='zoom' ? 'input' : 'change'));
     });
-    entry.overrides = overrides;
-    entry.format = editModalFormat.value;
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
-    URL.revokeObjectURL(entry.url);
-    entry.blob = blob;
-    entry.url = URL.createObjectURL(blob);
-    refreshOutputItemEl(entry);
-    if(qualitySelectedId===entry.id) qImg.src = entry.url;
+  });
+  document.getElementById('qualityReset').addEventListener('click', async ()=>{
+    if(!qualitySelectedId) return;
+    qZoom.value = 1; qImg.style.transform = 'scale(1)';
+    qBrightness.value = 0; qContrast.value = 0; qSaturation.value = 0;
+    await applyQualityAdjust();
+  });
 
-    const fname = `${entry.baseName}.${extFor(entry.format)}`;
-    const a = document.createElement('a');
-    a.href = entry.url;
-    a.download = fname;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    closeEditModal();
+  /* ----- current-item bar: rename / format switch / download ----- */
+  document.getElementById('finalNameInput').addEventListener('change', e=>{
+    const entry = state.generated.find(g=>g.id===qualitySelectedId);
+    if(!entry) return;
+    entry.baseName = safeFileName(e.target.value) || entry.baseName;
+    e.target.value = entry.baseName;
+    document.getElementById('finalDownloadLink').download = `${entry.baseName}.${extFor(entry.format)}`;
+    renderOutputStrip();
+  });
+  document.getElementById('finalFmtSelect').addEventListener('change', async e=>{
+    const entry = state.generated.find(g=>g.id===qualitySelectedId);
+    if(!entry) return;
+    entry.format = e.target.value;
+    await rerenderEntry(entry);
+    document.getElementById('finalExtLabel').textContent = '.'+extFor(entry.format);
+    const dl = document.getElementById('finalDownloadLink');
+    dl.href = entry.url;
+    dl.download = `${entry.baseName}.${extFor(entry.format)}`;
   });
 
 
