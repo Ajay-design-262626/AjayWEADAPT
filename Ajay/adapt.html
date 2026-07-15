@@ -353,16 +353,16 @@
   .undo-redo button:disabled{ opacity:.35; cursor:not-allowed; }
   .undo-redo button svg{ width:15px; height:15px; display:block; }
 
-  /* ---------- sticky editor column (step 2) ---------- */
-  #panel-2 .grid2 > div:first-child{
+  /* ---------- sticky editor column (Layout page) ---------- */
+  #layoutEditor .grid2 > div:first-child{
     position:sticky; top:16px; align-self:start;
   }
-  #panel-2 .grid2 > div:last-child{
+  #layoutEditor .grid2 > div:last-child{
     max-height: calc(100vh - 32px); overflow-y:auto; padding-right:6px;
   }
   @media (max-width: 900px){
-    #panel-2 .grid2 > div:first-child{ position:static; }
-    #panel-2 .grid2 > div:last-child{ max-height:none; overflow-y:visible; }
+    #layoutEditor .grid2 > div:first-child{ position:static; }
+    #layoutEditor .grid2 > div:last-child{ max-height:none; overflow-y:visible; }
   }
 
   /* ---------- rename controls (step 4) ---------- */
@@ -456,12 +456,56 @@
   .quality-slider input[type=range]{ flex:1; accent-color:var(--ink); }
   .quality-empty{ font-size:12.5px; color:var(--muted); text-align:center; padding:30px 10px; }
 
-  /* ---------- import project tab ---------- */
-  .import-project-card{ max-width:640px; margin:0 auto; text-align:center; }
-  .import-project-card .ip-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
-
   /* ---------- brand logo mark ---------- */
   .brand svg{ display:block; }
+
+  /* ---------- splash screen ---------- */
+  .splash-screen{
+    position:fixed; inset:0; background:#fff; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:16px; cursor:pointer; z-index:200;
+  }
+  .splash-screen .logo-mark{ width:120px; height:120px; }
+  .splash-screen h1{ font-size:34px; font-weight:800; margin:0; letter-spacing:-0.02em; }
+  .splash-screen .splash-hint{ font-size:12px; color:var(--muted); position:absolute; bottom:28px; }
+
+  /* ---------- page toolbar (Layout / Data / Final) ---------- */
+  .page-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
+  .toggle2{ display:flex; border:1px solid var(--line-strong); border-radius:100px; padding:3px; background:#fff; }
+  .toggle2 button{
+    font-size:12.5px; font-weight:700; padding:8px 18px; border-radius:100px; background:none; border:none; color:var(--muted);
+  }
+  .toggle2 button.active{ background:var(--ink); color:#fff; }
+  .pt-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  /* ---------- accordion (layer settings) ---------- */
+  .accordion{ display:flex; flex-direction:column; gap:6px; margin:14px 0; }
+  .acc-item{ border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .acc-head{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:10px 12px; background:var(--surface-raised); border:none; font-size:12.5px; font-weight:700; color:var(--ink);
+  }
+  .acc-head .acc-chevron{ transition:transform .12s; }
+  .acc-item.open .acc-head .acc-chevron{ transform:rotate(180deg); }
+  .acc-body{ display:none; padding:14px 12px; border-top:1px solid var(--line); }
+  .acc-item.open .acc-body{ display:block; }
+
+  /* ---------- rich color picker ---------- */
+  .color-picker{ display:flex; flex-direction:column; gap:10px; }
+  .cp-square{ position:relative; width:100%; height:150px; border-radius:6px; cursor:crosshair; overflow:hidden; }
+  .cp-square .cp-cursor{
+    position:absolute; width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.4);
+    transform:translate(-50%,-50%); pointer-events:none;
+  }
+  .cp-hue{ position:relative; height:14px; border-radius:100px; cursor:pointer;
+    background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
+  .cp-hue .cp-hue-handle{
+    position:absolute; top:50%; width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid var(--ink);
+    transform:translate(-50%,-50%); pointer-events:none;
+  }
+  .cp-row{ display:flex; align-items:center; gap:8px; }
+  .cp-row input[type=text]{ flex:1; font-family:var(--mono); text-transform:uppercase; }
+  .cp-swatch{ width:30px; height:30px; border-radius:6px; border:1px solid var(--line-strong); flex-shrink:0; }
+  .cp-eyedropper{ width:30px; height:30px; border-radius:6px; border:1px solid var(--line-strong); background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -477,20 +521,26 @@
       </svg>
       <h1>WE Adapt</h1>
     </div>
-    <div class="steps" id="steps">
-      <button class="step-pill active" data-step="1"><span class="n">1</span> Template</button>
-      <button class="step-pill" data-step="2" disabled><span class="n">2</span> Layout</button>
-      <button class="step-pill" data-step="3" disabled><span class="n">3</span> Data</button>
-      <button class="step-pill" data-step="4"><span class="n">4</span> Import Project</button>
+  </div>
+
+  <div class="page-toolbar" id="pageToolbar" style="display:none;">
+    <div class="toggle2" id="layoutDataToggle">
+      <button data-page="layout" class="active">Layout</button>
+      <button data-page="data">Data</button>
     </div>
-    <div class="undo-redo" title="Undo / Redo">
-      <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+    <div class="pt-right">
+      <button class="btn secondary small" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
+      <button class="icon-btn" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
       </button>
-      <button id="btnRedo" disabled title="Redo (Ctrl+Y)">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+      <button class="btn secondary small" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import</button>
+      <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
+      <button class="icon-btn" id="btnPageTrash" title="Delete">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M5 4l.6 9.5a1 1 0 0 0 1 .9h2.8a1 1 0 0 0 1-.9L11 4"/></svg>
       </button>
+      <button class="btn" id="btnNextPage">Next →</button>
     </div>
+    <span class="save-status" id="saveStatus"></span>
   </div>
 
   <div class="resume-banner" id="resumeBanner" style="display:none;">
@@ -501,24 +551,40 @@
     </div>
   </div>
 
-  <section class="panel active" id="panel-1">
-    <div class="grid2" style="grid-template-columns:1fr;">
-      <div>
-        <div class="card">
-          <h2 style="font-size:28px; font-weight:800; text-transform:uppercase; margin-bottom:10px;">Upload your template</h2>
-          <p class="hint" style="font-size:13px;">Export the flattened PSD as a PNG or JPG (File → Export → Export As… in Photoshop). This is the static background every adaptation will be built on top of.</p>
-          <div class="dropzone" id="dropzone">
-            <div class="icon">＋</div>
-            <div class="ddtext">Drop a PNG or JPG here <span class="ddicon">＋</span></div>
-            <div class="ddsub">One template at a time · PNG / JPG · any size</div>
-          </div>
-          <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none">
-        </div>
-      </div>
+  <section class="panel active" id="panel-splash">
+    <div class="splash-screen" id="splashScreen">
+      <svg class="logo-mark" viewBox="0 0 40 40" fill="currentColor">
+        <polygon points="2,14 9,14 5.5,21"/>
+        <polygon points="6,25 13,25 9.5,32"/>
+        <polygon points="12,13 21,13 16.5,26 12,26"/>
+        <path d="M22 6 H32 V13 H26 V16.5 H31 V23 H26 V27 H32 V34 H22 Z"/>
+      </svg>
+      <h1>WE Adapt</h1>
+      <span class="splash-hint">Click anywhere to continue</span>
     </div>
   </section>
 
-  <section class="panel" id="panel-2">
+  <section class="panel" id="panel-layout">
+    <div class="template-strip" id="templateStrip" style="display:none;"></div>
+
+    <div id="layoutUpload">
+      <div class="grid2" style="grid-template-columns:1fr;">
+        <div>
+          <div class="card">
+            <h2 style="font-size:28px; font-weight:800; text-transform:uppercase; margin-bottom:10px;">Upload your template</h2>
+            <p class="hint" style="font-size:13px;">Export the flattened PSD as a PNG or JPG (File → Export → Export As… in Photoshop). This is the static background every adaptation will be built on top of.</p>
+            <div class="dropzone" id="dropzone">
+              <div class="icon">＋</div>
+              <div class="ddtext">Drop a PNG or JPG here <span class="ddicon">＋</span></div>
+              <div class="ddsub">One template at a time · PNG / JPG · any size</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="layoutEditor" style="display:none;">
     <div class="grid2">
       <div>
         <div class="card" style="padding:12px;">
@@ -539,9 +605,6 @@
       <div>
         <div class="toolbar" style="margin-bottom:14px; justify-content:flex-end;">
           <div class="icon-toolbar">
-            <button class="icon-btn" id="btnDeleteLayerIcon" title="Delete selected layer">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M5 4l.6 9.5a1 1 0 0 0 1 .9h2.8a1 1 0 0 0 1-.9L11 4"/></svg>
-            </button>
             <button class="icon-btn" id="btnDownloadTemplateIcon" title="Download template background">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0 3-3m-3 3-3-3M3 13h10"/></svg>
             </button>
@@ -557,6 +620,15 @@
           <p class="hint">Each box becomes a field your spreadsheet fills in. Grouped by type above.</p>
           <div class="layer-list" id="layerList"></div>
           <div class="empty-note" id="layerEmptyNote">Draw a box on the template, tagged as this type, to add a layer here.</div>
+        </div>
+
+        <div class="undo-redo" id="layoutUndoRedo" title="Undo / Redo" style="margin:2px 0 14px;">
+          <button id="btnUndo" disabled title="Undo (Ctrl+Z)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+          </button>
+          <button id="btnRedo" disabled title="Redo (Ctrl+Y)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+          </button>
         </div>
 
         <div class="card" id="fontManagerCard">
@@ -586,82 +658,164 @@
             </select>
           </label>
 
-          <div id="textOptions">
-            <div class="row2">
-              <label class="field">
-                <span class="lbl">Font size (px)</span>
-                <input type="number" id="fontSize" value="32" min="6">
-              </label>
-              <label class="field">
-                <span class="lbl">Font weight</span>
-                <select id="fontWeight">
-                  <option value="400">Regular</option>
-                  <option value="600">Semibold</option>
-                  <option value="700" selected>Bold</option>
-                  <option value="800">Extra bold</option>
-                </select>
-              </label>
-            </div>
-            <div class="row2">
-              <label class="field">
-                <span class="lbl">Color</span>
-                <div class="color-field">
-                  <input type="color" id="fontColorSwatch" value="#1a1a18">
-                  <input type="text" id="fontColor" value="#1a1a18" placeholder="#1a1a18">
+          <div class="accordion" id="layerAccordion">
+            <div class="acc-item" data-acc="typography" id="accTypography">
+              <button type="button" class="acc-head" data-acc-toggle="typography">Typography <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <div class="acc-body" id="textOptions">
+                <div class="row2">
+                  <label class="field">
+                    <span class="lbl">Font size (px)</span>
+                    <input type="number" id="fontSize" value="32" min="6">
+                  </label>
+                  <label class="field">
+                    <span class="lbl">Font weight</span>
+                    <select id="fontWeight">
+                      <option value="400">Regular</option>
+                      <option value="600">Semibold</option>
+                      <option value="700" selected>Bold</option>
+                      <option value="800">Extra bold</option>
+                    </select>
+                  </label>
                 </div>
-              </label>
-              <label class="field">
-                <span class="lbl">Align</span>
-                <div class="segmented" id="textAlignSeg" role="group" aria-label="Text alignment">
-                  <button type="button" data-value="left" title="Align left">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="10" y2="8"/><line x1="2" y1="12" x2="13" y2="12"/></svg>
-                  </button>
-                  <button type="button" data-value="center" class="active" title="Align center">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="4" y1="8" x2="12" y2="8"/><line x1="3" y1="12" x2="13" y2="12"/></svg>
-                  </button>
-                  <button type="button" data-value="right" title="Align right">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="3" y1="12" x2="14" y2="12"/></svg>
-                  </button>
+                <div class="row2">
+                  <label class="field">
+                    <span class="lbl">Line height</span>
+                    <input type="number" id="lineHeightPct" value="118" min="80" max="250" step="1">
+                  </label>
+                  <label class="field">
+                    <span class="lbl">Letter spacing (px)</span>
+                    <input type="number" id="letterSpacing" value="0" min="-5" max="40" step="0.5">
+                  </label>
                 </div>
-                <input type="hidden" id="textAlign" value="center">
-              </label>
-            </div>
-            <label class="field">
-              <span class="lbl">Font family</span>
-              <select id="fontFamily">
-                <option value="-apple-system, Helvetica, Arial, sans-serif">System sans (default)</option>
-                <option value="Georgia, 'Times New Roman', serif">Serif (default)</option>
-                <option value="'Courier New', monospace">Monospace (default)</option>
-              </select>
-            </label>
-            <label class="field">
-              <span class="lbl">Vertical position</span>
-              <div class="segmented" id="vAlignSeg" role="group" aria-label="Vertical position">
-                <button type="button" data-value="top" title="Align top">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="3" x2="14" y2="3"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="6" y1="11" x2="10" y2="11"/></svg>
-                </button>
-                <button type="button" data-value="middle" class="active" title="Align middle">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="5" x2="13" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="5" y1="11" x2="11" y2="11"/></svg>
-                </button>
-                <button type="button" data-value="bottom" title="Align bottom">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="5" x2="10" y2="5"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="2" y1="13" x2="14" y2="13"/></svg>
-                </button>
+                <label class="field">
+                  <span class="lbl">Font family</span>
+                  <select id="fontFamily">
+                    <option value="'Poppins', -apple-system, Helvetica, Arial, sans-serif">Poppins (default)</option>
+                    <option value="-apple-system, Helvetica, Arial, sans-serif">System sans</option>
+                    <option value="Georgia, 'Times New Roman', serif">Serif</option>
+                    <option value="'Courier New', monospace">Monospace</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="lbl">Alignment</span>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <div class="segmented" id="textAlignSeg" role="group" aria-label="Text alignment">
+                      <button type="button" data-value="left" title="Align left">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="10" y2="8"/><line x1="2" y1="12" x2="13" y2="12"/></svg>
+                      </button>
+                      <button type="button" data-value="center" class="active" title="Align center">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="4" y1="8" x2="12" y2="8"/><line x1="3" y1="12" x2="13" y2="12"/></svg>
+                      </button>
+                      <button type="button" data-value="right" title="Align right">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="3" y1="12" x2="14" y2="12"/></svg>
+                      </button>
+                    </div>
+                    <div class="segmented" id="vAlignSeg" role="group" aria-label="Vertical position">
+                      <button type="button" data-value="top" title="Align top">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="3" x2="14" y2="3"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="6" y1="11" x2="10" y2="11"/></svg>
+                      </button>
+                      <button type="button" data-value="middle" class="active" title="Align middle">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="5" x2="13" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="5" y1="11" x2="11" y2="11"/></svg>
+                      </button>
+                      <button type="button" data-value="bottom" title="Align bottom">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="5" x2="10" y2="5"/><line x1="5" y1="9" x2="11" y2="9"/><line x1="2" y1="13" x2="14" y2="13"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <input type="hidden" id="textAlign" value="center">
+                  <input type="hidden" id="vAlign" value="middle">
+                </label>
+                <p class="hint" style="margin-top:-4px;">Long text auto-shrinks to fit the box width, then wraps.</p>
               </div>
-              <input type="hidden" id="vAlign" value="middle">
-            </label>
-            <p class="hint" style="margin-top:-4px;">Long text auto-shrinks to fit the box width, then wraps.</p>
-          </div>
+            </div>
 
-          <div id="imageOptions" style="display:none;">
-            <label class="field">
+            <div class="acc-item" data-acc="image" id="accImage">
+              <button type="button" class="acc-head" data-acc-toggle="image">Image <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <div class="acc-body" id="imageOptions">
+                <label class="field">
+                  <span class="lbl">Fit</span>
+                  <select id="imageFit">
+                    <option value="cover" selected>Cover (fill box, crop overflow)</option>
+                    <option value="contain">Contain (fit inside box)</option>
+                  </select>
+                </label>
+                <div class="toggle-row">
+                  <div class="tr-text">
+                    <span class="tr-label">Remove background</span>
+                    <span class="tr-sub">Cuts out this box's flat background color when generating</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="layerRemoveBgToggle">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-row" id="layerAutoAdaptRow">
+                  <div class="tr-text">
+                    <span class="tr-label">Adapt per row</span>
+                    <span class="tr-sub">Off = a fixed image on every export (e.g. a sale badge or CTA), set manually below</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="layerAutoAdaptToggle" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <label class="field" id="layerStaticImageField" style="display:none;">
+                  <span class="lbl">Fixed image</span>
+                  <button type="button" class="btn secondary small full" id="btnUploadStaticImage">Upload image</button>
+                  <input type="file" id="staticImageFileInput" accept="image/png,image/jpeg" style="display:none">
+                </label>
+              </div>
+            </div>
 
-              <span class="lbl">Fit</span>
-              <select id="imageFit">
-                <option value="cover" selected>Cover (fill box, crop overflow)</option>
-                <option value="contain">Contain (fit inside box)</option>
-              </select>
-            </label>
-            <p class="hint" style="margin-top:-4px;">Background removal for this field type is set in the "Background removal" panel above, not per box.</p>
+            <div class="acc-item" data-acc="fill" id="accFill">
+              <button type="button" class="acc-head" data-acc-toggle="fill">Fill <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <div class="acc-body">
+                <label class="field" id="layerStaticTextField" style="display:none;">
+                  <span class="lbl">Fixed text</span>
+                  <input type="text" id="layerStaticTextInput" placeholder="Text shown on every export">
+                </label>
+                <div class="color-picker">
+                  <div class="cp-square" id="cpSquare"><div class="cp-cursor" id="cpCursor"></div></div>
+                  <div class="cp-hue" id="cpHue"><div class="cp-hue-handle" id="cpHueHandle"></div></div>
+                  <div class="cp-row">
+                    <div class="cp-swatch" id="cpSwatch"></div>
+                    <input type="text" id="fontColor" value="#1a1a18" placeholder="#1a1a18">
+                    <button type="button" class="cp-eyedropper" id="cpEyedropper" title="Pick color from screen">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2l3 3-2 2-3-3 2-2zM9 5 3 11v2h2l6-6"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="acc-item" data-acc="effects" id="accEffects">
+              <button type="button" class="acc-head" data-acc-toggle="effects">Effects <svg class="acc-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></button>
+              <div class="acc-body">
+                <label class="field">
+                  <span class="lbl">Opacity (%)</span>
+                  <input type="number" id="layerOpacity" value="100" min="0" max="100">
+                </label>
+                <div class="toggle-row">
+                  <div class="tr-text">
+                    <span class="tr-label">Drop shadow</span>
+                    <span class="tr-sub">Soft shadow behind this layer</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="layerShadowToggle">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="row2" id="layerShadowFields" style="display:none;">
+                  <label class="field"><span class="lbl">Blur (px)</span><input type="number" id="layerShadowBlur" value="8" min="0" max="60"></label>
+                  <label class="field"><span class="lbl">Color</span>
+                    <div class="color-field">
+                      <input type="color" id="layerShadowColorSwatch" value="#000000">
+                      <input type="text" id="layerShadowColor" value="#000000">
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="row2">
@@ -677,16 +831,22 @@
         </div>
       </div>
     </div>
-
-    <div class="footer-nav">
-      <button class="btn secondary" data-goto="1">← Back</button>
-      <button class="btn" id="toStep3" disabled>Continue to data →</button>
     </div>
   </section>
 
-  <section class="panel" id="panel-3">
+  <section class="panel" id="panel-data">
     <div class="card">
-      <h2>2. Upload your content spreadsheet</h2>
+      <h2>Template &amp; row matching</h2>
+      <p class="hint">Name each template to match a value in your sheet, and pick the column that tells us which template to use for each row — the right design is then picked automatically, no manual work needed.</p>
+      <div class="row2" id="templateNameList"></div>
+      <label class="field" style="margin-top:10px;">
+        <span class="lbl">Template-picking column</span>
+        <select id="templatePickColumn"><option value="">— always use the active template —</option></select>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>Upload your content spreadsheet</h2>
 
       <div class="source-badge" id="sourceBadge" style="display:none;">
         <span class="sb-icon" id="sourceBadgeIcon">📄</span>
@@ -731,34 +891,10 @@
     </div>
 
     <div class="card" id="bgRemovalCard">
-      <h2>Background removal</h2>
-      <p class="hint">Applies to every image pulled in from your spreadsheet/Google Sheet for that field type — no need to set it per box.</p>
+      <h2>Background removal settings</h2>
+      <p class="hint">Turn "Remove background" on for individual Image/Logo layers in the Layout page — these settings tune how the color-key removal behaves for every layer that has it enabled.</p>
 
-      <div class="toggle-row" id="bgRemoveImageRow">
-        <div class="tr-text">
-          <span class="tr-label">Remove BG: Images</span>
-          <span class="tr-sub">Cuts out the subject in every Image-type field</span>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="bgRemoveImageToggle">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-row" id="bgRemoveLogoRow">
-        <div class="tr-text">
-          <span class="tr-label">Remove BG: Logos</span>
-          <span class="tr-sub">Cuts out the background in every Logo-type field</span>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="bgRemoveLogoToggle">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div id="bgRemoveAdvanced" style="display:none;">
-        <div style="height:1px; background:var(--line); margin:14px 0;"></div>
-
+      <div id="bgRemoveAdvanced">
         <label class="field">
           <span class="lbl">Background color</span>
           <select id="bgRemoveColorSource">
@@ -840,7 +976,18 @@
         <table class="datapeek" id="dataPeekTable"></table>
       </div>
     </div>
+  </section>
 
+  <section class="panel" id="panel-final">
+    <div class="undo-redo" id="finalUndoRedo" title="Undo / Redo" style="margin-bottom:14px;">
+      <button id="btnUndo2" disabled title="Undo (Ctrl+Z)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7a3.5 3.5 0 1 1 0 7H8"/><path d="M6 5 3 8l3 3"/></svg>
+      </button>
+      <button id="btnRedo2" disabled title="Redo (Ctrl+Y)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H6a3.5 3.5 0 1 0 0 7h2"/><path d="M10 5l3 3-3 3"/></svg>
+      </button>
+      <button class="btn" id="btnDownloadZip" disabled>Export All</button>
+    </div>
     <div class="card">
       <div class="toolbar">
         <div class="left">
@@ -853,7 +1000,6 @@
           </select>
           <button class="btn secondary" id="btnRegenerate">Generate</button>
           <button class="btn secondary" id="btnRenameAllToggle">✎ Rename all</button>
-          <button class="btn" id="btnDownloadZip" disabled>Download all</button>
         </div>
       </div>
       <p class="hint">Each row from your spreadsheet becomes one image at the original template size. Click any export below to fix its text before downloading, or use the Quality Check panel to fine-tune it.</p>
@@ -921,27 +1067,7 @@
       </div>
     </div>
 
-    <div class="footer-nav">
-      <button class="btn secondary" data-goto="2">← Back</button>
-      <span></span>
-    </div>
   </section>
-
-  <section class="panel" id="panel-4">
-    <div class="card import-project-card">
-      <h2 style="font-size:22px; margin-bottom:6px;">Import Project</h2>
-      <p class="hint">Save your progress in this browser, download a portable project file to store elsewhere (Drive, Dropbox, email…), or load one you saved earlier.</p>
-      <div class="ip-row">
-        <button class="btn secondary" id="btnSaveProject" title="Save your progress in this browser">💾 Save</button>
-        <button class="btn secondary" id="btnExportProject" title="Download a project file — store it in Google Drive, Dropbox, email, etc.">⭳ Export project file</button>
-        <button class="btn" id="btnImportProject" title="Load a project file you saved earlier">⭱ Import project file</button>
-        <input type="file" id="importProjectInput" accept="application/json,.json,.adapt" style="display:none">
-      </div>
-      <div class="save-status" id="saveStatus" style="margin-top:14px;"></div>
-    </div>
-  </section>
-
-  <div class="template-strip" id="templateStrip" style="display:none;"></div>
 
   <div class="modal-overlay" id="editModalOverlay">
     <div class="modal-card">
@@ -995,7 +1121,6 @@
     generated: [],               // {id, name, url, blob, rowIndex, overrides}
     exportFormat: 'png',         // 'png' | 'jpg' — applies to "download all"
     jpgQuality: 0.92,
-    removeBackgroundByType: { image: false, logo: false }, // global switches, not per-layer
     bgRemovalColorSource: 'auto', // 'auto' (detect from image edges) | 'manual'
     bgRemovalBgColor: '#ffffff',  // used when bgRemovalColorSource === 'manual'
     bgRemovalTolerance: 50,       // per-channel tolerance for background color matching (0-255)
@@ -1005,7 +1130,8 @@
     bgRemovalFill: false,         // composite onto a solid color instead of transparency
     bgRemovalFillColor: '#ffffff',
     templates: [],              // {id,name,dataUrl,naturalW,naturalH,layers,columnMap} — other template slots
-    activeTemplateId: null       // id of the slot whose data currently lives in the fields above
+    activeTemplateId: null,      // id of the slot whose data currently lives in the fields above
+    templatePickColumn: ''       // sheet column index used to auto-match a row to a template by name
   };
   let layerSeq = 1;
   let fontSeq = 1;
@@ -1060,9 +1186,8 @@
   }
 
   function updateUndoRedoButtons(){
-    const u = document.getElementById('btnUndo'), r = document.getElementById('btnRedo');
-    if(u) u.disabled = historyIndex <= 0;
-    if(r) r.disabled = historyIndex >= history.length - 1;
+    ['btnUndo','btnUndo2'].forEach(id=>{ const u = document.getElementById(id); if(u) u.disabled = historyIndex <= 0; });
+    ['btnRedo','btnRedo2'].forEach(id=>{ const r = document.getElementById(id); if(r) r.disabled = historyIndex >= history.length - 1; });
   }
 
   function resetHistory(){
@@ -1073,6 +1198,8 @@
 
   document.getElementById('btnUndo').addEventListener('click', undo);
   document.getElementById('btnRedo').addEventListener('click', redo);
+  document.getElementById('btnUndo2').addEventListener('click', undo);
+  document.getElementById('btnRedo2').addEventListener('click', redo);
   document.addEventListener('keydown', e=>{
     const tag = (document.activeElement && document.activeElement.tagName) || '';
     if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
@@ -1091,10 +1218,10 @@
 
   function bgRemovalAvailable(){ return true; }
 
-  // Background removal is a global, per-type setting now (not per layer instance).
+  // Background removal is now a per-layer toggle (set in the Image accordion in Layer settings).
   function isBgRemovalActiveForLayer(layer){
     if(!layer || layer.type==='text') return false;
-    return !!state.removeBackgroundByType[layer.type];
+    return !!layer.removeBackground;
   }
 
   function hexToRgb(hex){
@@ -1294,27 +1421,75 @@
     return promise;
   }
 
-  /* ===================== STEP NAV ===================== */
-  const panels = {1:document.getElementById('panel-1'),2:document.getElementById('panel-2'),3:document.getElementById('panel-3'),4:document.getElementById('panel-4')};
-  const pills = Array.from(document.querySelectorAll('.step-pill'));
+  /* ===================== PAGE NAV ===================== */
+  const pages = {
+    splash: document.getElementById('panel-splash'),
+    layout: document.getElementById('panel-layout'),
+    data: document.getElementById('panel-data'),
+    final: document.getElementById('panel-final')
+  };
+  let currentPage = 'splash';
 
-  function goToStep(n){
-    Object.keys(panels).forEach(k=>panels[k].classList.toggle('active', Number(k)===n));
-    pills.forEach(p=>{
-      const s = Number(p.dataset.step);
-      p.classList.toggle('active', s===n);
+  function showLayoutSubview(){
+    const hasTemplate = !!state.templateImg;
+    document.getElementById('layoutUpload').style.display = hasTemplate ? 'none' : 'block';
+    document.getElementById('layoutEditor').style.display = hasTemplate ? 'block' : 'none';
+  }
+
+  function updateNextButton(){
+    const btn = document.getElementById('btnNextPage');
+    if(currentPage==='layout'){
+      btn.style.display=''; btn.textContent = 'Next →'; btn.disabled = !state.layers.length;
+    } else if(currentPage==='data'){
+      btn.style.display=''; btn.textContent = 'Next →'; btn.disabled = !state.sheetRows.length;
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  function goToPage(name){
+    currentPage = name;
+    Object.keys(pages).forEach(k=>pages[k].classList.toggle('active', k===name));
+    document.getElementById('pageToolbar').style.display = name==='splash' ? 'none' : 'flex';
+    document.querySelectorAll('#layoutDataToggle button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.page===name);
     });
-    if(n===2) requestAnimationFrame(renderEditor);
+    updateNextButton();
+    if(name==='layout'){ showLayoutSubview(); requestAnimationFrame(renderEditor); }
+    if(name==='data'){ buildColumnMapUI(); renderTemplateNameList(); }
   }
-  function unlockStep(n){
-    const p = pills.find(p=>Number(p.dataset.step)===n);
-    if(p){ p.disabled=false; p.classList.add('done'); }
+
+  const splashScreen = document.getElementById('splashScreen');
+  let splashLeft = false;
+  function leaveSplash(){
+    if(splashLeft) return;
+    splashLeft = true;
+    goToPage('layout');
   }
-  pills.forEach(p=>{
-    p.addEventListener('click', ()=>{ if(!p.disabled) goToStep(Number(p.dataset.step)); });
+  setTimeout(leaveSplash, 6000);
+  splashScreen.addEventListener('click', leaveSplash);
+
+  document.querySelectorAll('#layoutDataToggle button').forEach(b=>{
+    b.addEventListener('click', ()=> goToPage(b.dataset.page) );
   });
-  document.querySelectorAll('[data-goto]').forEach(b=>{
-    b.addEventListener('click', ()=> goToStep(Number(b.dataset.goto)) );
+  document.getElementById('btnNextPage').addEventListener('click', ()=>{
+    if(currentPage==='layout') goToPage('data');
+    else if(currentPage==='data'){
+      goToPage('final');
+      if(!state.generated.length && state.sheetRows.length) generateAll();
+    }
+  });
+  document.getElementById('btnPageTrash').addEventListener('click', ()=>{
+    if(currentPage==='layout') deleteSelectedLayer();
+    else if(currentPage==='data') clearLoadedSheet();
+    else if(currentPage==='final'){
+      state.generated = [];
+      document.getElementById('outputGrid').innerHTML = '';
+      document.getElementById('btnDownloadZip').disabled = true;
+      qualitySelectedId = null;
+      qEmpty.style.display = 'block';
+      qImg.style.display = 'none';
+    }
   });
 
   /* ===================== STEP 1: TEMPLATE UPLOAD ===================== */
@@ -1326,7 +1501,10 @@
   dropzone.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) loadTemplateFile(e.dataTransfer.files[0]); });
   fileInput.addEventListener('change', e=>{ if(e.target.files[0]) loadTemplateFile(e.target.files[0]); });
 
-  document.getElementById('btnNewTemplate').addEventListener('click', ()=>{ goToStep(1); });
+  document.getElementById('btnNewTemplate').addEventListener('click', ()=>{
+    document.getElementById('layoutEditor').style.display = 'none';
+    document.getElementById('layoutUpload').style.display = 'block';
+  });
 
   function loadTemplateFile(file){
     if(!file.type.match(/image\/(png|jpe?g)/)){ alert('Please upload a PNG or JPG file.'); return; }
@@ -1345,11 +1523,11 @@
         } else {
           syncActiveTemplateIntoList();
         }
-        unlockStep(2);
-        goToStep(2);
+        showLayoutSubview();
         setupEditorCanvas();
         resetHistory();
         renderTemplateStrip();
+        updateNextButton();
       };
       img.src = e.target.result;
     };
@@ -1381,11 +1559,10 @@
       const img = new Image();
       img.onload = ()=>{
         state.templateImg = img;
-        unlockStep(2);
-        document.getElementById('toStep3').disabled = state.layers.length ? false : true;
-        if(state.layers.length) unlockStep(3);
+        showLayoutSubview();
         setupEditorCanvas();
         resetHistory();
+        updateNextButton();
       };
       img.src = snap.dataUrl;
     } else {
@@ -1400,7 +1577,7 @@
     loadTemplateSnapshot(target);
     buildColumnMapUI();
     renderTemplateStrip();
-    goToStep(target.dataUrl ? 2 : 1);
+    showLayoutSubview();
   }
   function addNewTemplateSlot(){
     syncActiveTemplateIntoList();
@@ -1414,7 +1591,8 @@
     state.selectedLayerId = null;
     state.templates.push(currentTemplateSnapshot());
     renderTemplateStrip();
-    goToStep(1);
+    showLayoutSubview();
+    updateNextButton();
   }
   function removeTemplateSlot(id){
     const idx = state.templates.findIndex(t=>t.id===id);
@@ -1430,7 +1608,8 @@
         state.templateImg = null; state.templateDataUrl = null; state.templateName = 'template';
         state.naturalW = 0; state.naturalH = 0; state.layers = []; state.columnMap = {};
         state.selectedLayerId = null;
-        goToStep(1);
+        showLayoutSubview();
+        updateNextButton();
       }
     }
     renderTemplateStrip();
@@ -1480,13 +1659,29 @@
 
   const LOREM = "Lorem ipsum dolor sit amet";
 
+  function applyLayerFxToCtx(ctx, layer){
+    ctx.globalAlpha = (layer.opacity !== undefined ? layer.opacity : 100)/100;
+    if(layer.shadow && layer.shadow.enabled){
+      ctx.shadowColor = layer.shadow.color || '#000000';
+      ctx.shadowBlur = layer.shadow.blur || 0;
+      ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    }
+  }
+  function clearLayerFxFromCtx(ctx){
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+  }
+
   function drawLoremPreviewForLayer(ctx, layer, scale){
     const x = layer.x*scale, y = layer.y*scale, w = layer.w*scale, h = layer.h*scale;
     if(layer.type==='text'){
+      applyLayerFxToCtx(ctx, layer);
+      if('letterSpacing' in ctx) ctx.letterSpacing = (layer.letterSpacing||0)*scale+'px';
       const pad = 4*scale;
       const {fontSize, lines, lineHeight} = wrapAndFitText(
         ctx, LOREM, w-pad*2, h-pad*2,
-        layer.fontSize*scale, layer.fontWeight, layer.fontFamily
+        layer.fontSize*scale, layer.fontWeight, layer.fontFamily, layer.lineHeightPct
       );
       ctx.font = `${layer.fontWeight} ${fontSize}px ${layer.fontFamily}`;
       ctx.fillStyle = layer.fontColor;
@@ -1503,6 +1698,8 @@
       lines.forEach((line,i)=>{
         ctx.fillText(line, tx, startY + i*lineHeight);
       });
+      if('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+      clearLayerFxFromCtx(ctx);
     } else {
       ctx.save();
       ctx.beginPath();
@@ -1656,13 +1853,15 @@
       id, name: prefix+'_'+(countOfType(type)+1), type,
       x: box.x, y: box.y, w: box.w, h: box.h,
       fontSize:32, fontWeight:'700', fontColor:'#1a1a18', textAlign:'center',
-      fontFamily:"-apple-system, Helvetica, Arial, sans-serif", vAlign:'middle',
-      imageFit:'cover'
+      fontFamily:"'Poppins', -apple-system, Helvetica, Arial, sans-serif", vAlign:'middle',
+      lineHeightPct:118, letterSpacing:0,
+      imageFit:'cover', removeBackground:false,
+      autoAdapt:true, staticText:'', staticImageDataUrl:null,
+      opacity:100, shadow:{enabled:false, blur:8, color:'#000000'}
     };
     state.layers.push(layer);
     selectLayer(id);
-    document.getElementById('toStep3').disabled = false;
-    unlockStep(3);
+    updateNextButton();
     renderEditor();
     pushHistory();
   }
@@ -1712,9 +1911,7 @@
         if(e.target.classList.contains('ldel')){
           state.layers = state.layers.filter(l=>l.id!==layer.id);
           if(state.selectedLayerId===layer.id) state.selectedLayerId=null;
-          if(!state.layers.length){
-            document.getElementById('toStep3').disabled = true;
-          }
+          updateNextButton();
           renderEditor();
           pushHistory();
           return;
@@ -1733,7 +1930,6 @@
   const elFontSize = document.getElementById('fontSize');
   const elFontWeight = document.getElementById('fontWeight');
   const elFontColor = document.getElementById('fontColor');
-  const elFontColorSwatch = document.getElementById('fontColorSwatch');
   const elTextAlign = document.getElementById('textAlign');
   const elFontFamily = document.getElementById('fontFamily');
   const elVAlign = document.getElementById('vAlign');
@@ -1742,10 +1938,7 @@
   const elBoxY = document.getElementById('boxY');
   const elBoxW = document.getElementById('boxW');
   const elBoxH = document.getElementById('boxH');
-  const elBgRemoveImageToggle = document.getElementById('bgRemoveImageToggle');
-  const elBgRemoveLogoToggle = document.getElementById('bgRemoveLogoToggle');
   const elBgRemoveStatus = document.getElementById('bgRemoveStatus');
-  const elBgRemoveAdvanced = document.getElementById('bgRemoveAdvanced');
   const elBgRemoveColorSource = document.getElementById('bgRemoveColorSource');
   const elBgRemoveManualColorField = document.getElementById('bgRemoveManualColorField');
   const elBgRemoveBgColor = document.getElementById('bgRemoveBgColor');
@@ -1768,7 +1961,7 @@
     elFontSize.value = layer.fontSize;
     elFontWeight.value = layer.fontWeight;
     elFontColor.value = layer.fontColor;
-    elFontColorSwatch.value = /^#[0-9a-fA-F]{6}$/.test(layer.fontColor) ? layer.fontColor : '#000000';
+    setPickerFromHex(layer.fontColor);
     elTextAlign.value = layer.textAlign;
     setSegmentedActive('textAlignSeg', layer.textAlign);
     elFontFamily.value = layer.fontFamily;
@@ -1779,8 +1972,25 @@
     elBoxY.value = Math.round(layer.y);
     elBoxW.value = Math.round(layer.w);
     elBoxH.value = Math.round(layer.h);
-    document.getElementById('textOptions').style.display = layer.type==='text' ? 'block':'none';
-    document.getElementById('imageOptions').style.display = layer.type!=='text' ? 'block':'none';
+    document.getElementById('lineHeightPct').value = layer.lineHeightPct !== undefined ? layer.lineHeightPct : 118;
+    document.getElementById('letterSpacing').value = layer.letterSpacing !== undefined ? layer.letterSpacing : 0;
+    document.getElementById('accTypography').style.display = layer.type==='text' ? '' : 'none';
+    document.getElementById('accImage').style.display = layer.type!=='text' ? '' : 'none';
+
+    document.getElementById('layerRemoveBgToggle').checked = !!layer.removeBackground;
+    document.getElementById('layerAutoAdaptToggle').checked = layer.autoAdapt !== false;
+    const isStatic = layer.autoAdapt === false;
+    document.getElementById('layerStaticTextField').style.display = (isStatic && layer.type==='text') ? 'block' : 'none';
+    document.getElementById('layerStaticImageField').style.display = (isStatic && layer.type!=='text') ? 'block' : 'none';
+    document.getElementById('layerStaticTextInput').value = layer.staticText || '';
+
+    document.getElementById('layerOpacity').value = layer.opacity !== undefined ? layer.opacity : 100;
+    const shadow = layer.shadow || {enabled:false, blur:8, color:'#000000'};
+    document.getElementById('layerShadowToggle').checked = !!shadow.enabled;
+    document.getElementById('layerShadowFields').style.display = shadow.enabled ? 'grid' : 'none';
+    document.getElementById('layerShadowBlur').value = shadow.blur;
+    document.getElementById('layerShadowColor').value = shadow.color;
+    document.getElementById('layerShadowColorSwatch').value = shadow.color;
   }
 
   function updateSelectedLayer(field, value){
@@ -1825,48 +2035,177 @@
   elFontWeight.addEventListener('change', e=>updateSelectedLayer('fontWeight', e.target.value));
   elFontColor.addEventListener('input', e=>{
     updateSelectedLayer('fontColor', e.target.value);
-    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) elFontColorSwatch.value = e.target.value;
-  });
-  elFontColorSwatch.addEventListener('input', e=>{
-    elFontColor.value = e.target.value;
-    updateSelectedLayer('fontColor', e.target.value);
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) setPickerFromHex(e.target.value);
   });
   elFontFamily.addEventListener('change', e=>updateSelectedLayer('fontFamily', e.target.value));
   elImageFit.addEventListener('change', e=>updateSelectedLayer('imageFit', e.target.value));
+  document.getElementById('lineHeightPct').addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    if(!isNaN(v) && v>0) updateSelectedLayer('lineHeightPct', v);
+  });
+  document.getElementById('letterSpacing').addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    if(!isNaN(v)) updateSelectedLayer('letterSpacing', v);
+  });
+
+  /* ----- accordion (layer settings sections) ----- */
+  document.querySelectorAll('[data-acc-toggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      btn.closest('.acc-item').classList.toggle('open');
+    });
+  });
+
+  /* ----- per-layer: remove background, auto-adapt / static content ----- */
+  document.getElementById('layerRemoveBgToggle').addEventListener('change', e=>{
+    updateSelectedLayer('removeBackground', e.target.checked);
+  });
+  document.getElementById('layerAutoAdaptToggle').addEventListener('change', e=>{
+    updateSelectedLayer('autoAdapt', e.target.checked);
+    renderLayerDetail();
+  });
+  document.getElementById('layerStaticTextInput').addEventListener('input', e=>{
+    updateSelectedLayer('staticText', e.target.value);
+  });
+  document.getElementById('btnUploadStaticImage').addEventListener('click', ()=>{
+    document.getElementById('staticImageFileInput').click();
+  });
+  document.getElementById('staticImageFileInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{ updateSelectedLayer('staticImageDataUrl', ev.target.result); };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  /* ----- effects: opacity + drop shadow ----- */
+  document.getElementById('layerOpacity').addEventListener('input', e=>{
+    let v = Number(e.target.value);
+    if(isNaN(v)) v = 100;
+    v = Math.max(0, Math.min(100, v));
+    updateSelectedLayer('opacity', v);
+  });
+  function updateShadow(partial){
+    const layer = state.layers.find(l=>l.id===state.selectedLayerId);
+    if(!layer) return;
+    const shadow = {...(layer.shadow || {enabled:false, blur:8, color:'#000000'}), ...partial};
+    updateSelectedLayer('shadow', shadow);
+  }
+  document.getElementById('layerShadowToggle').addEventListener('change', e=>{
+    updateShadow({enabled: e.target.checked});
+    document.getElementById('layerShadowFields').style.display = e.target.checked ? 'grid' : 'none';
+  });
+  document.getElementById('layerShadowBlur').addEventListener('input', e=>{
+    const v = Number(e.target.value);
+    updateShadow({blur: isNaN(v) ? 8 : v});
+  });
+  document.getElementById('layerShadowColor').addEventListener('input', e=>{
+    updateShadow({color: e.target.value});
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('layerShadowColorSwatch').value = e.target.value;
+  });
+  document.getElementById('layerShadowColorSwatch').addEventListener('input', e=>{
+    document.getElementById('layerShadowColor').value = e.target.value;
+    updateShadow({color: e.target.value});
+  });
+
+  /* ----- rich HSB color picker (bound to fontColor / text fill) ----- */
+  const cpSquare = document.getElementById('cpSquare');
+  const cpCursor = document.getElementById('cpCursor');
+  const cpHue = document.getElementById('cpHue');
+  const cpHueHandle = document.getElementById('cpHueHandle');
+  const cpSwatch = document.getElementById('cpSwatch');
+  let pickerHsv = {h:0, s:0, v:0};
+
+  function hsvToHex(h,s,v){
+    s/=100; v/=100;
+    const c = v*s, x = c*(1-Math.abs((h/60)%2-1)), m = v-c;
+    let r,g,b;
+    if(h<60){ r=c;g=x;b=0; } else if(h<120){ r=x;g=c;b=0; } else if(h<180){ r=0;g=c;b=x; }
+    else if(h<240){ r=0;g=x;b=c; } else if(h<300){ r=x;g=0;b=c; } else { r=c;g=0;b=x; }
+    const toHex = n=>Math.round((n+m)*255).toString(16).padStart(2,'0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+  function hexToHsv(hex){
+    const {r,g,b} = hexToRgb(hex);
+    const rn=r/255, gn=g/255, bn=b/255;
+    const max=Math.max(rn,gn,bn), min=Math.min(rn,gn,bn), d=max-min;
+    let h=0;
+    if(d!==0){
+      if(max===rn) h=60*(((gn-bn)/d)%6);
+      else if(max===gn) h=60*((bn-rn)/d+2);
+      else h=60*((rn-gn)/d+4);
+    }
+    if(h<0) h+=360;
+    const s = max===0 ? 0 : (d/max)*100;
+    const v = max*100;
+    return {h,s,v};
+  }
+  function paintSquare(){
+    cpSquare.style.background = `linear-gradient(to top, #000, rgba(0,0,0,0)), linear-gradient(to right, #fff, rgba(255,255,255,0)), hsl(${pickerHsv.h},100%,50%)`;
+    cpCursor.style.left = pickerHsv.s+'%';
+    cpCursor.style.top = (100-pickerHsv.v)+'%';
+    cpHueHandle.style.left = (pickerHsv.h/360*100)+'%';
+    cpSwatch.style.background = hsvToHex(pickerHsv.h, pickerHsv.s, pickerHsv.v);
+  }
+  function setPickerFromHex(hex){
+    if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+    pickerHsv = hexToHsv(hex);
+    paintSquare();
+  }
+  function pickerCommit(){
+    const hex = hsvToHex(pickerHsv.h, pickerHsv.s, pickerHsv.v);
+    elFontColor.value = hex;
+    updateSelectedLayer('fontColor', hex);
+    paintSquare();
+  }
+  function bindDrag(el, onMove){
+    let dragging = false;
+    function move(e){
+      const rect = el.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = Math.max(0, Math.min(1, (clientX-rect.left)/rect.width));
+      const y = Math.max(0, Math.min(1, (clientY-rect.top)/rect.height));
+      onMove(x,y);
+    }
+    el.addEventListener('mousedown', e=>{ dragging=true; move(e); e.preventDefault(); });
+    el.addEventListener('touchstart', e=>{ dragging=true; move(e); });
+    window.addEventListener('mousemove', e=>{ if(dragging) move(e); });
+    window.addEventListener('touchmove', e=>{ if(dragging) move(e); });
+    window.addEventListener('mouseup', ()=>{ dragging=false; });
+    window.addEventListener('touchend', ()=>{ dragging=false; });
+  }
+  bindDrag(cpSquare, (x,y)=>{
+    pickerHsv.s = x*100;
+    pickerHsv.v = (1-y)*100;
+    pickerCommit();
+  });
+  bindDrag(cpHue, (x)=>{
+    pickerHsv.h = x*360;
+    pickerCommit();
+  });
+  document.getElementById('cpEyedropper').addEventListener('click', async ()=>{
+    if(!window.EyeDropper){ alert('Eyedropper not supported in this browser.'); return; }
+    try{
+      const ed = new window.EyeDropper();
+      const result = await ed.open();
+      setPickerFromHex(result.sRGBHex);
+      elFontColor.value = result.sRGBHex;
+      updateSelectedLayer('fontColor', result.sRGBHex);
+    }catch(err){ /* user cancelled */ }
+  });
+  paintSquare();
 
   function updateBgRemovalStatusText(){
-    const onImage = state.removeBackgroundByType.image;
-    const onLogo = state.removeBackgroundByType.logo;
-    elBgRemoveAdvanced.style.display = (onImage || onLogo) ? 'block' : 'none';
-    if(!onImage && !onLogo){
-      elBgRemoveStatus.textContent = '';
-      elBgRemoveStatus.classList.remove('err');
-      return;
-    }
-    const parts = [];
-    if(onImage) parts.push('Images');
-    if(onLogo) parts.push('Logos');
     const extras = [];
-    if(state.bgRemovalColorSource==='manual') extras.push(`removing ${state.bgRemovalBgColor}`);
-    else extras.push('auto-detecting the background color');
+    extras.push(state.bgRemovalColorSource==='manual' ? `removing ${state.bgRemovalBgColor}` : 'auto-detecting the background color from the image edges');
+    extras.push(`tolerance ${state.bgRemovalTolerance}`);
     if(state.bgRemovalTrim && !state.bgRemovalFill) extras.push('trimmed to the subject');
     if(state.bgRemovalFill) extras.push(`filled with ${state.bgRemovalFillColor}`);
-    const extraText = ` ${extras.join(', ')}.`.replace(/^ /, ' ').replace(/^./, c=>c.toUpperCase());
-    elBgRemoveStatus.textContent =
-      `Background will be removed for every ${parts.join(' and ')} field when generating (tolerance ${state.bgRemovalTolerance}).${extraText}`;
+    elBgRemoveStatus.textContent = `Applies to any layer with "Remove background" turned on (Layout page): ${extras.join(', ')}.`;
     elBgRemoveStatus.classList.remove('err');
   }
 
-  elBgRemoveImageToggle.addEventListener('change', e=>{
-    state.removeBackgroundByType.image = e.target.checked;
-    updateBgRemovalStatusText();
-    renderEditor();
-  });
-  elBgRemoveLogoToggle.addEventListener('change', e=>{
-    state.removeBackgroundByType.logo = e.target.checked;
-    updateBgRemovalStatusText();
-    renderEditor();
-  });
   elBgRemoveColorSource.addEventListener('change', e=>{
     state.bgRemovalColorSource = e.target.value;
     elBgRemoveManualColorField.style.display = e.target.value==='manual' ? 'block' : 'none';
@@ -1934,12 +2273,11 @@
     if(!state.selectedLayerId) return;
     state.layers = state.layers.filter(l=>l.id!==state.selectedLayerId);
     state.selectedLayerId=null;
-    if(!state.layers.length) document.getElementById('toStep3').disabled = true;
+    updateNextButton();
     renderEditor();
     pushHistory();
   }
   document.getElementById('btnDeleteLayer').addEventListener('click', deleteSelectedLayer);
-  document.getElementById('btnDeleteLayerIcon').addEventListener('click', deleteSelectedLayer);
   document.getElementById('btnDownloadTemplateIcon').addEventListener('click', ()=>{
     if(!state.templateDataUrl) return;
     const a = document.createElement('a');
@@ -2035,8 +2373,6 @@
   }
 
   renderFontList();
-  elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
-  elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
   elBgRemoveColorSource.value = state.bgRemovalColorSource;
   elBgRemoveManualColorField.style.display = state.bgRemovalColorSource==='manual' ? 'block' : 'none';
   elBgRemoveBgColor.value = state.bgRemovalBgColor;
@@ -2050,11 +2386,6 @@
   elBgRemoveFillColor.value = state.bgRemovalFillColor;
   elBgRemoveFillColorSwatch.value = state.bgRemovalFillColor;
   updateBgRemovalStatusText();
-
-  document.getElementById('toStep3').addEventListener('click', ()=>{
-    buildColumnMapUI();
-    goToStep(3);
-  });
 
   window.addEventListener('resize', ()=>{ if(state.templateImg) setupEditorCanvas(); });
 
@@ -2103,6 +2434,7 @@
     rawSheetFile = rows;
     applyHeaderToggle();
     document.getElementById('mappingCard').style.display='block';
+    updateNextButton();
   }
 
   const sourceBadge = document.getElementById('sourceBadge');
@@ -2138,6 +2470,7 @@
     imageLoadFailures = [];
     const failBanner = document.getElementById('imageFailBanner');
     if(failBanner) failBanner.style.display = 'none';
+    updateNextButton();
   }
 
   document.getElementById('btnReplaceSource').addEventListener('click', clearLoadedSheet);
@@ -2288,7 +2621,7 @@
     const tbody = document.getElementById('mapTableBody');
     tbody.innerHTML='';
     const colCount = state.columnCount || 0;
-    state.layers.forEach(layer=>{
+    state.layers.filter(l=>l.autoAdapt!==false).forEach(layer=>{
       if(state.columnMap[layer.id]===undefined && colCount){
         const guess = guessColumnFor(layer.name);
         state.columnMap[layer.id] = guess;
@@ -2318,6 +2651,39 @@
     }
     fnSel.innerHTML = fnHtml;
     fnSel.onchange = ()=>{ state.filenameColumn = fnSel.value===''? '': Number(fnSel.value); };
+
+    const tplSel = document.getElementById('templatePickColumn');
+    if(tplSel){
+      let tplHtml = '<option value="">— always use the active template —</option>';
+      for(let i=0;i<colCount;i++){
+        tplHtml += `<option value="${i}" ${String(state.templatePickColumn)===String(i)?'selected':''}>${escapeHtml(state.columnLabels[i])}</option>`;
+      }
+      tplSel.innerHTML = tplHtml;
+      tplSel.onchange = ()=>{ state.templatePickColumn = tplSel.value===''? '': Number(tplSel.value); };
+    }
+  }
+
+  function renderTemplateNameList(){
+    const wrap = document.getElementById('templateNameList');
+    if(!wrap) return;
+    syncActiveTemplateIntoList();
+    wrap.innerHTML = '';
+    state.templates.forEach(t=>{
+      const label = document.createElement('label');
+      label.className = 'field';
+      label.innerHTML = `<span class="lbl">${t.id===state.activeTemplateId ? 'Active — ' : ''}Template name</span>`;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = t.name || 'template';
+      input.placeholder = 'Match this to a value in your sheet';
+      input.addEventListener('input', ()=>{
+        t.name = input.value;
+        if(t.id===state.activeTemplateId) state.templateName = input.value;
+        renderTemplateStrip();
+      });
+      label.appendChild(input);
+      wrap.appendChild(label);
+    });
   }
 
   function renderDataPeek(){
@@ -2414,10 +2780,10 @@
     }
   }
 
-  function wrapAndFitText(ctx, text, maxWidth, maxHeight, baseFontSize, fontWeight, fontFamily){
+  function wrapAndFitText(ctx, text, maxWidth, maxHeight, baseFontSize, fontWeight, fontFamily, lineHeightPct){
     let fontSize = baseFontSize;
     let lines = [];
-    const lineHeightFactor = 1.18;
+    const lineHeightFactor = (lineHeightPct || 118)/100;
     while(fontSize >= 8){
       ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
       lines = wrapText(ctx, text, maxWidth);
@@ -2484,11 +2850,12 @@
     });
   }
 
-  async function renderRow(row, overrides, format, quality){
+  async function renderRow(row, overrides, format, quality, tpl){
     overrides = overrides || {};
-    await document.fonts.ready; 
-    renderCanvas.width = state.naturalW;
-    renderCanvas.height = state.naturalH;
+    tpl = tpl || { img: state.templateImg, layers: state.layers, naturalW: state.naturalW, naturalH: state.naturalH, columnMap: state.columnMap };
+    await document.fonts.ready;
+    renderCanvas.width = tpl.naturalW;
+    renderCanvas.height = tpl.naturalH;
     renderCtx.clearRect(0,0,renderCanvas.width, renderCanvas.height);
     if(format==='jpg'){
       renderCtx.fillStyle = '#ffffff';
@@ -2498,18 +2865,25 @@
     if(adjust){
       renderCtx.filter = `brightness(${100+adjust.brightness}%) contrast(${100+adjust.contrast}%) saturate(${100+adjust.saturation}%)`;
     }
-    renderCtx.drawImage(state.templateImg, 0,0, state.naturalW, state.naturalH);
+    renderCtx.drawImage(tpl.img, 0,0, tpl.naturalW, tpl.naturalH);
 
-    for(const layer of state.layers){
-      const col = state.columnMap[layer.id];
-      const rawValue = (col===''||col===undefined||col===null) ? '' : row[col];
-      const value = (overrides[layer.id]!==undefined) ? overrides[layer.id] : rawValue;
+    for(const layer of tpl.layers){
+      let value;
+      if(layer.autoAdapt===false){
+        value = layer.type==='text' ? layer.staticText : layer.staticImageDataUrl;
+      } else {
+        const col = tpl.columnMap[layer.id];
+        const rawValue = (col===''||col===undefined||col===null) ? '' : row[col];
+        value = (overrides[layer.id]!==undefined) ? overrides[layer.id] : rawValue;
+      }
       if(layer.type==='text'){
         if(!value) continue;
+        applyLayerFxToCtx(renderCtx, layer);
+        if('letterSpacing' in renderCtx) renderCtx.letterSpacing = (layer.letterSpacing||0)+'px';
         const pad = 4;
         const {fontSize, lines, lineHeight} = wrapAndFitText(
           renderCtx, String(value), layer.w-pad*2, layer.h-pad*2,
-          layer.fontSize, layer.fontWeight, layer.fontFamily
+          layer.fontSize, layer.fontWeight, layer.fontFamily, layer.lineHeightPct
         );
         renderCtx.font = `${layer.fontWeight} ${fontSize}px ${layer.fontFamily}`;
         renderCtx.fillStyle = layer.fontColor;
@@ -2526,12 +2900,15 @@
         lines.forEach((line,i)=>{
           renderCtx.fillText(line, tx, startY + i*lineHeight);
         });
+        if('letterSpacing' in renderCtx) renderCtx.letterSpacing = '0px';
+        clearLayerFxFromCtx(renderCtx);
       } else {
         if(!value) continue;
         const img = await loadImageForLayer(String(value), layer);
         if(img){
           const transform = overrides[layer.id+'__transform'];
           renderCtx.save();
+          applyLayerFxToCtx(renderCtx, layer);
           renderCtx.beginPath();
           renderCtx.rect(layer.x, layer.y, layer.w, layer.h);
           renderCtx.clip();
@@ -2548,18 +2925,57 @@
     return String(s).replace(/[^a-z0-9\-_]+/gi,'_').slice(0,60) || 'untitled';
   }
 
-  function baseNameFor(row, fnCol, index){
+  function baseNameFor(row, fnCol, index, templateName){
     const fnHasValue = (fnCol!==''&&fnCol!==undefined&&fnCol!==null) && row[fnCol];
     if(fnHasValue) return safeFileName(row[fnCol]);
-    return `${safeFileName(state.templateName)}_${String(index+1).padStart(3,'0')}`;
+    return `${safeFileName(templateName || state.templateName)}_${String(index+1).padStart(3,'0')}`;
   }
 
-  function textLayersForMapping(){
-    return state.layers.filter(l=>l.type==='text');
+  function textLayersForMapping(layers){
+    return (layers || state.layers).filter(l=>l.type==='text' && l.autoAdapt!==false);
   }
 
   function anyLayerUsesBackgroundRemoval(){
-    return state.layers.some(l=>isBgRemovalActiveForLayer(l));
+    syncActiveTemplateIntoList();
+    return state.templates.some(t=>(t.layers||[]).some(l=>isBgRemovalActiveForLayer(l)));
+  }
+
+  function findTemplateByName(name){
+    if(name===undefined || name===null || name==='') return null;
+    const target = String(name).trim().toLowerCase();
+    if(!target) return null;
+    return state.templates.find(t=>String(t.name||'').trim().toLowerCase()===target) || null;
+  }
+
+  const templateImageCache = new Map(); // templateId -> Promise<HTMLImageElement|null>
+  function loadTemplateImageCached(snap){
+    if(!snap.dataUrl) return Promise.resolve(null);
+    if(templateImageCache.has(snap.id)) return templateImageCache.get(snap.id);
+    const p = new Promise(resolve=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>resolve(null);
+      img.src = snap.dataUrl;
+    });
+    templateImageCache.set(snap.id, p);
+    return p;
+  }
+
+  // Resolves which template a spreadsheet row should render against: if a
+  // "template-picking column" is set and its value matches a template's name,
+  // use that template's background/layers/mapping instead of the active one.
+  async function resolveTemplateForRow(row){
+    syncActiveTemplateIntoList();
+    if(state.templatePickColumn!=='' && state.templatePickColumn!==undefined && state.templatePickColumn!==null){
+      const match = findTemplateByName(row[state.templatePickColumn]);
+      if(match && match.dataUrl){
+        const img = await loadTemplateImageCached(match);
+        if(img){
+          return { id: match.id, name: match.name, img, layers: match.layers||[], naturalW: match.naturalW, naturalH: match.naturalH, columnMap: match.columnMap||{} };
+        }
+      }
+    }
+    return { id: state.activeTemplateId, name: state.templateName, img: state.templateImg, layers: state.layers, naturalW: state.naturalW, naturalH: state.naturalH, columnMap: state.columnMap };
   }
 
   async function generateAll(){
@@ -2580,24 +2996,27 @@
     const format = document.getElementById('exportFormatSelect').value;
 
     const usesBgRemoval = anyLayerUsesBackgroundRemoval();
+    templateImageCache.clear();
 
     for(let i=0;i<total;i++){
       const row = state.sheetRows[i];
+      const tpl = await resolveTemplateForRow(row);
       const entry = {
         id: 'G'+i,
         rowIndex: i,
         overrides: {},
         format: format,
-        baseName: baseNameFor(row, state.filenameColumn, i),
+        baseName: baseNameFor(row, state.filenameColumn, i, tpl.name),
+        tpl,
         blob: null, url: null
       };
       if(usesBgRemoval){
         text.textContent = `${i+1} / ${total} — removing backgrounds can take a few seconds per image`;
       }
-      const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+      const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, tpl);
       entry.blob = blob;
       entry.url = URL.createObjectURL(blob);
-      entry.usedBgRemoval = usesBgRemoval;
+      entry.usedBgRemoval = tpl.layers.some(l=>isBgRemovalActiveForLayer(l));
       state.generated.push(entry);
 
       grid.appendChild(buildOutputItemEl(entry));
@@ -2680,7 +3099,7 @@
     if(!entry) return;
     entry.format = format;
     const row = state.sheetRows[entry.rowIndex];
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
     URL.revokeObjectURL(entry.url);
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
@@ -2735,7 +3154,7 @@
     if(adjust.brightness || adjust.contrast || adjust.saturation) entry.overrides.__adjust = adjust;
     else delete entry.overrides.__adjust;
     const row = state.sheetRows[entry.rowIndex];
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
     URL.revokeObjectURL(entry.url);
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
@@ -2820,12 +3239,12 @@
   let editingEntryId = null;
   let activeRepositionResizeListeners = [];
 
-  function imageLayersForMapping(){
-    return state.layers.filter(l=>l.type==='image' || l.type==='logo');
+  function imageLayersForMapping(layers){
+    return (layers || state.layers).filter(l=>(l.type==='image' || l.type==='logo') && l.autoAdapt!==false);
   }
 
-  function buildImageRepositionField(layer, entry, row){
-    const col = state.columnMap[layer.id];
+  function buildImageRepositionField(layer, entry, row, columnMap){
+    const col = (columnMap || state.columnMap)[layer.id];
     const url = (col===''||col===undefined||col===null) ? '' : String(row[col] ?? '');
     const wrap = document.createElement('div');
     wrap.className = 'mf-row';
@@ -2940,14 +3359,14 @@
     editModalPreview.src = entry.url;
     editModalFormat.value = entry.format;
 
-    const textLayers = textLayersForMapping();
-    const imageLayers = imageLayersForMapping();
+    const textLayers = textLayersForMapping(entry.tpl.layers);
+    const imageLayers = imageLayersForMapping(entry.tpl.layers);
     editModalFields.innerHTML = '';
     if(!textLayers.length && !imageLayers.length){
       editModalFields.innerHTML = '<p class="hint">This template has no editable layers.</p>';
     }
     textLayers.forEach(layer=>{
-      const col = state.columnMap[layer.id];
+      const col = entry.tpl.columnMap[layer.id];
       const original = (col===''||col===undefined||col===null) ? '' : (row[col] ?? '');
       const currentVal = entry.overrides[layer.id] !== undefined ? entry.overrides[layer.id] : original;
       const wrap = document.createElement('div');
@@ -2959,7 +3378,7 @@
       editModalFields.appendChild(wrap);
     });
     imageLayers.forEach(layer=>{
-      editModalFields.appendChild(buildImageRepositionField(layer, entry, row));
+      editModalFields.appendChild(buildImageRepositionField(layer, entry, row, entry.tpl.columnMap));
     });
     editModalOverlay.classList.add('open');
   }
@@ -2983,11 +3402,11 @@
     });
     entry.overrides = kept;
     const row = state.sheetRows[entry.rowIndex];
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
     URL.revokeObjectURL(entry.url);
     entry.blob = blob; entry.url = URL.createObjectURL(blob);
     refreshOutputItemEl(entry);
-    openEditModal(entry.id); 
+    openEditModal(entry.id);
   });
 
   document.getElementById('btnApplyAndDownload').addEventListener('click', async ()=>{
@@ -2997,14 +3416,14 @@
     const overrides = {...entry.overrides};
     editModalFields.querySelectorAll('textarea[data-layer-id]').forEach(ta=>{
       const layerId = ta.dataset.layerId;
-      const col = state.columnMap[layerId];
+      const col = entry.tpl.columnMap[layerId];
       const original = (col===''||col===undefined||col===null) ? '' : String(row[col] ?? '');
       if(ta.value !== original) overrides[layerId] = ta.value;
       else delete overrides[layerId];
     });
     entry.overrides = overrides;
     entry.format = editModalFormat.value;
-    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality);
+    const blob = await renderRow(row, entry.overrides, entry.format, state.jpgQuality, entry.tpl);
     URL.revokeObjectURL(entry.url);
     entry.blob = blob;
     entry.url = URL.createObjectURL(blob);
@@ -3059,7 +3478,7 @@
       hasHeaderRow: document.getElementById('hasHeaderRow').checked,
       columnMap: state.columnMap,
       filenameColumn: state.filenameColumn,
-      removeBackgroundByType: state.removeBackgroundByType,
+      templatePickColumn: state.templatePickColumn,
       bgRemovalColorSource: state.bgRemovalColorSource,
       bgRemovalBgColor: state.bgRemovalBgColor,
       bgRemovalTolerance: state.bgRemovalTolerance,
@@ -3099,7 +3518,6 @@
         state.layers = data.layers || [];
         layerSeq = data.layerSeq || 1;
         fontSeq = data.fontSeq || 1;
-        state.removeBackgroundByType = data.removeBackgroundByType || {image:false, logo:false};
         state.bgRemovalColorSource = data.bgRemovalColorSource || 'auto';
         state.bgRemovalBgColor = data.bgRemovalBgColor || '#ffffff';
         state.bgRemovalTolerance = data.bgRemovalTolerance !== undefined ? data.bgRemovalTolerance : 50;
@@ -3110,10 +3528,9 @@
         state.bgRemovalFillColor = data.bgRemovalFillColor || '#ffffff';
         state.columnMap = data.columnMap || {};
         state.filenameColumn = data.filenameColumn || '';
+        state.templatePickColumn = data.templatePickColumn || '';
         state.selectedLayerId = null;
         state.customFonts = [];
-        elBgRemoveImageToggle.checked = state.removeBackgroundByType.image;
-        elBgRemoveLogoToggle.checked = state.removeBackgroundByType.logo;
         elBgRemoveColorSource.value = state.bgRemovalColorSource;
         elBgRemoveManualColorField.style.display = state.bgRemovalColorSource==='manual' ? 'block' : 'none';
         elBgRemoveBgColor.value = state.bgRemovalBgColor;
@@ -3152,15 +3569,12 @@
           }
 
           if(state.templateImg){
-            unlockStep(2);
             setupEditorCanvas();
-            if(state.layers.length){
-              unlockStep(3);
-              document.getElementById('toStep3').disabled = false;
-            }
           }
           resetHistory();
-          goToStep(state.templateImg ? (rawSheetFile && rawSheetFile.length ? 3 : 2) : 1);
+          goToPage(state.templateImg ? (rawSheetFile && rawSheetFile.length ? 'data' : 'layout') : 'layout');
+          showLayoutSubview();
+          updateNextButton();
           resolve();
         });
       }
